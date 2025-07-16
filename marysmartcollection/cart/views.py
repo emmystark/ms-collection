@@ -21,6 +21,9 @@ import json
 import logging
 import base64
 from django.utils.decorators import method_decorator
+from decimal import Decimal
+
+
 
 UserModel = get_user_model()
 
@@ -154,15 +157,62 @@ def debug_cart(request):
 # from square.http.api_response import ApiResponse  
 
 logger = logging.getLogger(__name__)
+def convert_decimals_to_floats(obj):
+    """Recursively convert Decimal objects and model instances to JSON-serializable types."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_decimals_to_floats(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_decimals_to_floats(item) for item in obj]
+    elif hasattr(obj, '__dict__'):  # Handle Django model instances
+        return convert_decimals_to_floats(obj.__dict__)
+    return obj
 
-logger = logging.getLogger(__name__)
+def convert_decimals_to_floats(obj):
+    """Recursively convert Decimal objects and model instances to JSON-serializable types."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_decimals_to_floats(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_decimals_to_floats(item) for item in obj]
+    elif hasattr(obj, '__dict__'):
+        # Convert model instance to dict, excluding non-serializable fields
+        data = {k: v for k, v in obj.__dict__.items() if k != '_state'}
+        return convert_decimals_to_floats(data)
+    return obj
 
 class CreateCheckoutView(View):
     def get(self, request):
         try:
             # Initialize cart
             cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
+            logger.debug(f"Cart contents before conversion: {cart.cart}")
+
+            # Convert all Decimal objects and model instances in cart.cart
+            try:
+                # Replace product objects with serializable dictionaries
+                modified_cart = {}
+                for key, item in cart.cart.items():
+                    item_copy = item.copy()
+                    if 'product' in item_copy:
+                        product = item_copy['product']
+                        # Convert product to dict with essential fields
+                        item_copy['product'] = {
+                            'id': product.id,
+                            'name': product.name,
+                            # Add other necessary fields, excluding Decimal or non-serializable
+                        }
+                    modified_cart[key] = convert_decimals_to_floats(item_copy)
+                # Update session with converted cart
+                request.session['cart'] = modified_cart
+                request.session.modified = True  # Force session save
+                cart.cart = modified_cart  # Update cart object
+                logger.debug(f"Cart contents after conversion: {request.session['cart']}")
+            except Exception as e:
+                logger.error(f"Error serializing cart session data: {str(e)}")
+                return JsonResponse({"error": f"Failed to serialize cart data: {str(e)}"}, status=500)
 
             # Check for empty cart
             if not cart.cart:
@@ -172,27 +222,38 @@ class CreateCheckoutView(View):
             # Prepare line items for Square order
             line_items = []
             for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
+                try:
+                    product = item['product']  # Now a dict
+                    quantity = str(item['quantity'])
+                    price = int(float(item['new_price']) * 100)  # Convert to cents
+                    size = item.get('size', '')
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"Invalid cart item: {str(e)}")
+                    return JsonResponse({"error": f"Invalid cart item: {str(e)}"}, status=400)
 
                 line_item = {
                     "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
+                    "name": f"{product['name']} ({size})" if size else product['name'],
                     "base_price_money": {
                         "amount": price,
-                        "currency": "CAD"
+                        "currency": "CAD"  # Match test_payment_link_alt.py
                     }
                 }
                 line_items.append(line_item)
 
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
+            # Calculate total for validation, ensure float
+            try:
+                total_price = cart.get_total_price()
+                if isinstance(total_price, Decimal):
+                    total_price = float(total_price)
+                total_amount = int(total_price * 100)  # Convert to cents
+                logger.debug(f"Cart total: {total_price}, Total amount (cents): {total_amount}")
+                if total_amount <= 0:
+                    logger.error("Cart total is zero")
+                    return JsonResponse({"error": "Cart total is zero"}, status=400)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error calculating cart total: {str(e)}")
+                return JsonResponse({"error": f"Invalid cart total: {str(e)}"}, status=400)
 
             # Verify Square credentials
             if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
@@ -202,74 +263,55 @@ class CreateCheckoutView(View):
             # Create Square order
             idempotency_key = str(uuid.uuid4())
             order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
+                "order": {
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items,
+                    "state": "OPEN"
+                },
+                "idempotency_key": idempotency_key
             }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
+            logger.debug(f"Order request body: {json.dumps(order_data, indent=2)}")
 
+            headers = {
+                "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "Square-Version": "2023-10-18"
+            }
             try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/orders",
+                    headers=headers,
+                    data=json.dumps(order_data),
+                    timeout=10
                 )
-                if not order_response.errors and order_response.order:
-                    order_id = order_response.order.id
+                if response.status_code == 200:
+                    order_id = response.json()['order']['id']
                     logger.debug(f"Order created: {order_id}")
                 else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors or "Unknown error"}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Order creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Order creation HTTP request failed: {str(e)}")
+                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
 
-            # Create payment link using HTTP request
+            # Create payment link
             payment_link_body = {
                 "idempotency_key": str(uuid.uuid4()),
                 "checkout_options": {
                     "redirect_url": "http://localhost:8000/cart/checkout/success/",
-                    "currency": "CAD",
+                    "currency": "CAD",  # Match test_payment_link_alt.py
                     "ask_for_shipping_address": False
                 },
                 "order": {
                     "order_id": order_id,
                     "location_id": settings.SQUARE_LOCATION_ID,
-                    "line_items": line_items  # Reuse line_items from order creation
+                    "line_items": line_items  # Include line_items to match test_payment_link_alt.py
                 }
             }
             logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
 
             try:
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
                 response = requests.post(
                     "https://connect.squareupsandbox.com/v2/online-checkout/payment-links",
                     headers=headers,
@@ -291,12 +333,24 @@ class CreateCheckoutView(View):
 
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
     def get(self, request):
         try:
             # Initialize cart
             cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
+            logger.debug(f"Cart contents before conversion: {cart.cart}")
+
+            # Convert all Decimal objects in cart.cart to float
+            try:
+                # Deep copy to avoid modifying the original cart prematurely
+                modified_cart = convert_decimals_to_floats(cart.cart)
+                # Update session with converted cart
+                request.session['cart'] = modified_cart
+                request.session.modified = True  # Force session save
+                logger.debug(f"Cart contents after conversion: {request.session['cart']}")
+            except Exception as e:
+                logger.error(f"Error serializing cart session data: {str(e)}")
+                return JsonResponse({"error": f"Failed to serialize cart data: {str(e)}"}, status=500)
 
             # Check for empty cart
             if not cart.cart:
@@ -306,1116 +360,253 @@ class CreateCheckoutView(View):
             # Prepare line items for Square order
             line_items = []
             for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "CAD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
-            try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )
-                if not order_response.errors and order_response.order:
-                    order_id = order_response.order.id
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors or "Unknown error"}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
                 try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(
-                    idempotency_key=payment_link_body["idempotency_key"],
-                    checkout_options=payment_link_body["checkout_options"],
-                    order_id=payment_link_body["order_id"]
-                )
-                if not payment_link_response.errors and payment_link_response.payment_link:
-                    checkout_url = payment_link_response.payment_link.url
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors or "Unknown error"}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
+                    product = item['product']
+                    quantity = str(item['quantity'])
+                    price = int(float(item['new_price']) * 100)  # Convert to cents
+                    size = item.get('size', '')
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"Invalid cart item: {str(e)}")
+                    return JsonResponse({"error": f"Invalid cart item: {str(e)}"}, status=400)
 
                 line_item = {
                     "quantity": quantity,
                     "name": f"{product.name} ({size})" if size else product.name,
                     "base_price_money": {
                         "amount": price,
-                        "currency": "CAD"
+                        "currency": "CAD"  # Match test_payment_link_alt.py
                     }
                 }
                 line_items.append(line_item)
 
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
+            # Calculate total for validation, convert Decimal to float
             try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )
-                if not order_response.errors and order_response.order:
-                    order_id = order_response.order.id
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors or "Unknown error"}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(
-                    idempotency_key=payment_link_body["idempotency_key"],
-                    checkout_options=payment_link_body["checkout_options"],
-                    order_id=payment_link_body["order_id"]
-                )
-                if not payment_link_response.errors and payment_link_response.payment_link:
-                    checkout_url = payment_link_response.payment_link.url
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors or "Unknown error"}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "CAD"  # Confirmed as CAD
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
-            try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "CAD"  # Changed to CAD
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
-            try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-        
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "USD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
-            try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "USD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_data = {
-                "location_id": settings.SQUARE_LOCATION_ID,
-                "line_items": line_items,
-                "state": "OPEN"
-            }
-            logger.debug(f"Order data: {json.dumps(order_data, indent=2)}")
-
-            try:
-                order_response = client.orders.create(
-                    order=order_data,
-                    idempotency_key=idempotency_key
-                )  # Pass order and idempotency_key directly
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except AttributeError as e:
-                logger.error(f"SDK AttributeError: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                body = {
-                    "order": order_data,
-                    "idempotency_key": idempotency_key
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "USD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Verify Square credentials
-            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
-                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
-                return JsonResponse({"error": "Missing Square credentials"}, status=500)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_body = {
-                "order": {
-                    "location_id": settings.SQUARE_LOCATION_ID,
-                    "line_items": line_items,
-                    "state": "OPEN"
-                },
-                "idempotency_key": idempotency_key
-            }
-            logger.debug(f"Order request body: {json.dumps(order_body, indent=2)}")
-
-            try:
-                order_response = client.orders.create(body=order_body)  # Use 'create' instead of 'create_order'
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except AttributeError as e:
-                logger.error(f"SDK AttributeError: {str(e)}. Falling back to HTTP request.")
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2023-10-18"
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(order_body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
-
-            # Create payment link
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']  # Product object from cart
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents
-                size = item.get('size', '')  # Get size, default to empty string
-
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "USD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)  # Convert to cents
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Create Square order using SDK
-            idempotency_key = str(uuid.uuid4())
-            order_body = {
-                "order": {
-                    "location_id": settings.SQUARE_LOCATION_ID,
-                    "line_items": line_items,
-                    "state": "OPEN"
-                },
-                "idempotency_key": idempotency_key
-            }
-            logger.debug(f"Order request body: {json.dumps(order_body, indent=2)}")
-
-            try:
-                order_response = client.orders.create(body=order_body)
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except AttributeError as e:
-                logger.error(f"SDK AttributeError: {str(e)}. Falling back to HTTP request.")
-                # Fallback to HTTP request
-                headers = {
-                    "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
-                    "Content-Type": "application/json",
-                    "Square-Version": "2025-05-21"
-                }
-                try:
-                    response = requests.post(
-                        "https://connect.squareupsandbox.com/v2/orders",
-                        headers=headers,
-                        data=json.dumps(order_body),
-                        timeout=10
-                    )
-                    if response.status_code == 200:
-                        order_id = response.json()['order']['id']
-                        logger.debug(f"Order created via HTTP: {order_id}")
-                    else:
-                        error_message = response.json().get('errors', ['Unknown error'])
-                        logger.error(f"HTTP Order creation failed: {error_message}")
-                        return JsonResponse({"error": error_message}, status=response.status_code)
-                except requests.RequestException as e:
-                    logger.error(f"HTTP request failed: {str(e)}")
-                    return JsonResponse({"error": f"HTTP request failed: {str(e)}"}, status=500)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
-
-            # Create payment link for the order
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"  # Update for production
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-
-            # Check for empty cart
-            if not cart.cart:
-                logger.error("Cart is empty")
-                return JsonResponse({"error": "Cart is empty"}, status=400)
-
-            # Prepare line items for Square order
-            line_items = []
-            for item in cart:
-                product = item['product']  # Product object from cart
-                quantity = str(item['quantity'])
-                price = int(float(item['new_price']) * 100)  # Convert to cents, ensure float conversion
-                size = item.get('size', '')  # Get size, default to empty string
-
-                # Create line item with size as part of name
-                line_item = {
-                    "quantity": quantity,
-                    "name": f"{product.name} ({size})" if size else product.name,
-                    "base_price_money": {
-                        "amount": price,
-                        "currency": "USD"
-                    }
-                }
-                line_items.append(line_item)
-
-            # Calculate total for validation
-            total_amount = int(float(cart.get_total_price()) * 100)  # Convert to cents
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
-
-            # Create Square order
-            idempotency_key = str(uuid.uuid4())
-            order_body = {
-                "order": {
-                    "location_id": settings.SQUARE_LOCATION_ID,
-                    "line_items": line_items,
-                    "state": "OPEN"
-                },
-                "idempotency_key": idempotency_key
-            }
-            logger.debug(f"Order request body: {json.dumps(order_body, indent=2)}")
-
-            try:
-                # Use the correct Orders API endpoint
-                order_response = client.orders.create(body=order_body)
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
-                    logger.debug(f"Order created: {order_id}")
-                else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except AttributeError as e:
-                logger.error(f"SDK AttributeError: {str(e)}")
-                return JsonResponse({"error": f"SDK error: {str(e)}. Please ensure the Square SDK is up to date."}, status=500)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
-
-            # Create payment link for the order
-            payment_link_body = {
-                "idempotency_key": str(uuid.uuid4()),
-                "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"  # Update for production
-                },
-                "order_id": order_id
-            }
-            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
-
-            try:
-                # Use the correct Payment Links API endpoint
-                payment_link_response = client.checkout.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
-                    logger.debug(f"Checkout URL: {checkout_url}")
-                    # Save order_id in session for webhook processing
-                    request.session['square_order_id'] = order_id
-                    return JsonResponse({"checkout_url": checkout_url})
-                else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Payment link creation error: {str(e)}", exc_info=True)
-                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
-
-        except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request):
-        try:
-            # Initialize cart
-            cart = Cart(request)
-            logger.debug(f"Cart contents: {cart.cart}")
-            
-            # Calculate total
-            try:
-                total_amount = int(cart.get_total_price() * 100)  # Use get_total_price
-                logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
+                total_price = cart.get_total_price()
+                if isinstance(total_price, Decimal):
+                    total_price = float(total_price)
+                total_amount = int(total_price * 100)  # Convert to cents
+                logger.debug(f"Cart total: {total_price}, Total amount (cents): {total_amount}")
+                if total_amount <= 0:
+                    logger.error("Cart total is zero")
+                    return JsonResponse({"error": "Cart total is zero"}, status=400)
             except (TypeError, ValueError) as e:
                 logger.error(f"Error calculating cart total: {str(e)}")
-                return JsonResponse({"error": "Invalid cart total"}, status=400)
-            
-            # Check for empty cart
-            if total_amount <= 0:
-                logger.error("Cart is empty or total is zero")
-                return JsonResponse({"error": "Cart is empty or total is zero"}, status=400)
-            
-            # Verify credentials
+                return JsonResponse({"error": f"Invalid cart total: {str(e)}"}, status=400)
+
+            # Verify Square credentials
             if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
                 logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
                 return JsonResponse({"error": "Missing Square credentials"}, status=500)
-            logger.debug(f"Access Token: {settings.SQUARE_ACCESS_TOKEN[:10]}...")
-            logger.debug(f"Location ID: {settings.SQUARE_LOCATION_ID}")
-            
-            # Generate idempotency key
-            idempotency_key = str(uuid.uuid4())
-            logger.debug(f"Idempotency key: {idempotency_key}")
 
-            # Prepare API request
+            # Create Square order
+            idempotency_key = str(uuid.uuid4())
+            order_data = {
+                "order": {
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items,
+                    "state": "OPEN"
+                },
+                "idempotency_key": idempotency_key
+            }
+            logger.debug(f"Order request body: {json.dumps(order_data, indent=2)}")
+
             headers = {
                 "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
                 "Content-Type": "application/json",
                 "Square-Version": "2023-10-18"
             }
+            try:
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/orders",
+                    headers=headers,
+                    data=json.dumps(order_data),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    order_id = response.json()['order']['id']
+                    logger.debug(f"Order created: {order_id}")
+                else:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Order creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Order creation HTTP request failed: {str(e)}")
+                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
 
-            body = {
-                "idempotency_key": idempotency_key,
-                "quick_pay": {
-                    "name": "Cart Total",
-                    "price_money": {
-                        "amount": total_amount,
-                        "currency": "USD"
-                    },
-                    "location_id": settings.SQUARE_LOCATION_ID
+            # Create payment link
+            payment_link_body = {
+                "idempotency_key": str(uuid.uuid4()),
+                "checkout_options": {
+                    "redirect_url": "http://localhost:8000/cart/checkout/success/",
+                    "currency": "CAD",  # Match test_payment_link_alt.py
+                    "ask_for_shipping_address": False
+                },
+                "order": {
+                    "order_id": order_id,
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items  # Include line_items to match test_payment_link_alt.py
                 }
             }
+            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
 
-            logger.debug(f"Request headers: {headers}")
-            logger.debug(f"Request body: {json.dumps(body, indent=2)}")
-            
-            # Make API request
             try:
                 response = requests.post(
                     "https://connect.squareupsandbox.com/v2/online-checkout/payment-links",
                     headers=headers,
-                    data=json.dumps(body),
+                    data=json.dumps(payment_link_body),
                     timeout=10
                 )
-            except requests.exceptions.RequestException as e:
-                logger.error(f"API request failed: {str(e)}")
-                return JsonResponse({"error": f"API request failed: {str(e)}"}, status=500)
-
-            logger.debug(f"Response status: {response.status_code}")
-            logger.debug(f"Response content: {response.content}")
-
-            # Parse response
-            try:
-                data = response.json()
                 if response.status_code == 200:
-                    checkout_url = data["payment_link"]["url"]
+                    checkout_url = response.json()['payment_link']['url']
                     logger.debug(f"Checkout URL: {checkout_url}")
+                    request.session['square_order_id'] = order_id
                     return JsonResponse({"checkout_url": checkout_url})
                 else:
-                    error_message = data.get("errors", ["Unknown error"])
-                    logger.error(f"API error: {error_message}")
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Payment link creation failed: {error_message}")
                     return JsonResponse({"error": error_message}, status=response.status_code)
-            except ValueError as e:
-                logger.error(f"Failed to parse response: {str(e)}, Content: {response.content}")
-                return JsonResponse({"error": "Failed to parse response from Square"}, status=500)
-            except KeyError as e:
-                logger.error(f"Missing key in response: {str(e)}, Content: {response.content}")
-                return JsonResponse({"error": f"Missing key in response: {str(e)}"}, status=500)
+            except requests.RequestException as e:
+                logger.error(f"Payment link creation error: {str(e)}")
+                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
 
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+    def get(self, request):
+        try:
+            # Initialize cart
+            cart = Cart(request)
+            logger.debug(f"Cart contents before conversion: {cart.cart}")
+
+            # Convert all Decimal objects in cart.cart to float
+            try:
+                cart.cart = convert_decimals_to_floats(cart.cart)
+                cart.save()  # Save the modified cart to session early
+                logger.debug(f"Cart contents after conversion: {cart.cart}")
+            except Exception as e:
+                logger.error(f"Error serializing cart session data: {str(e)}")
+                return JsonResponse({"error": f"Failed to serialize cart data: {str(e)}"}, status=500)
+
+            # Check for empty cart
+            if not cart.cart:
+                logger.error("Cart is empty")
+                return JsonResponse({"error": "Cart is empty"}, status=400)
+
+            # Prepare line items for Square order
+            line_items = []
+            for item in cart:
+                try:
+                    product = item['product']
+                    quantity = str(item['quantity'])
+                    price = int(float(item['new_price']) * 100)  # Convert to cents
+                    size = item.get('size', '')
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"Invalid cart item: {str(e)}")
+                    return JsonResponse({"error": f"Invalid cart item: {str(e)}"}, status=400)
+
+                line_item = {
+                    "quantity": quantity,
+                    "name": f"{product.name} ({size})" if size else product.name,
+                    "base_price_money": {
+                        "amount": price,
+                        "currency": "CAD"  # Match test_payment_link_alt.py
+                    }
+                }
+                line_items.append(line_item)
+
+            # Calculate total for validation, convert Decimal to float
+            try:
+                total_price = cart.get_total_price()
+                if isinstance(total_price, Decimal):
+                    total_price = float(total_price)
+                total_amount = int(total_price * 100)  # Convert to cents
+                logger.debug(f"Cart total: {total_price}, Total amount (cents): {total_amount}")
+                if total_amount <= 0:
+                    logger.error("Cart total is zero")
+                    return JsonResponse({"error": "Cart total is zero"}, status=400)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error calculating cart total: {str(e)}")
+                return JsonResponse({"error": f"Invalid cart total: {str(e)}"}, status=400)
+
+            # Verify Square credentials
+            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
+                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
+                return JsonResponse({"error": "Missing Square credentials"}, status=500)
+
+            # Create Square order
+            idempotency_key = str(uuid.uuid4())
+            order_data = {
+                "order": {
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items,
+                    "state": "OPEN"
+                },
+                "idempotency_key": idempotency_key
+            }
+            logger.debug(f"Order request body: {json.dumps(order_data, indent=2)}")
+
+            headers = {
+                "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "Square-Version": "2023-10-18"
+            }
+            try:
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/orders",
+                    headers=headers,
+                    data=json.dumps(order_data),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    order_id = response.json()['order']['id']
+                    logger.debug(f"Order created: {order_id}")
+                else:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Order creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Order creation HTTP request failed: {str(e)}")
+                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
+
+            # Create payment link
+            payment_link_body = {
+                "idempotency_key": str(uuid.uuid4()),
+                "checkout_options": {
+                    "redirect_url": "http://localhost:8000/cart/checkout/success/",
+                    "currency": "CAD",  # Match test_payment_link_alt.py
+                    "ask_for_shipping_address": False
+                },
+                "order": {
+                    "order_id": order_id,
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items  # Include line_items to match test_payment_link_alt.py
+                }
+            }
+            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
+
+            try:
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/online-checkout/payment-links",
+                    headers=headers,
+                    data=json.dumps(payment_link_body),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    checkout_url = response.json()['payment_link']['url']
+                    logger.debug(f"Checkout URL: {checkout_url}")
+                    request.session['square_order_id'] = order_id
+                    return JsonResponse({"checkout_url": checkout_url})
+                else:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Payment link creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Payment link creation error: {str(e)}")
+                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
+
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
     def get(self, request):
         try:
             # Initialize cart
@@ -1430,32 +621,59 @@ class CreateCheckoutView(View):
             # Prepare line items for Square order
             line_items = []
             for item in cart:
-                product = item['product']  # Product object from cart
-                quantity = str(item['quantity'])
-                price = int(item['new_price'] * 100)  # Convert to cents
-                size = item.get('size', '')  # Get size, default to empty string if not present
+                try:
+                    product = item['product']
+                    quantity = str(item['quantity'])
+                    price = int(float(item['new_price']) * 100)  # Convert to cents
+                    size = item.get('size', '')
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"Invalid cart item: {str(e)}")
+                    return JsonResponse({"error": f"Invalid cart item: {str(e)}"}, status=400)
 
-                # Create line item with size as a modifier or note
                 line_item = {
                     "quantity": quantity,
                     "name": f"{product.name} ({size})" if size else product.name,
                     "base_price_money": {
                         "amount": price,
-                        "currency": "USD"
+                        "currency": "CAD"  # Match test_payment_link_alt.py
                     }
                 }
                 line_items.append(line_item)
 
-            # Calculate total for validation
-            total_amount = int(cart.get_total_price() * 100)  # Convert to cents
-            logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
-            if total_amount <= 0:
-                logger.error("Cart total is zero")
-                return JsonResponse({"error": "Cart total is zero"}, status=400)
+            # Calculate total for validation, convert Decimal to float
+            try:
+                total_price = cart.get_total_price()
+                if isinstance(total_price, Decimal):
+                    total_price = float(total_price)
+                total_amount = int(total_price * 100)  # Convert to cents
+                logger.debug(f"Cart total: {total_price}, Total amount (cents): {total_amount}")
+                if total_amount <= 0:
+                    logger.error("Cart total is zero")
+                    return JsonResponse({"error": "Cart total is zero"}, status=400)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error calculating cart total: {str(e)}")
+                return JsonResponse({"error": f"Invalid cart total: {str(e)}"}, status=400)
+
+            # Ensure cart session data is JSON-serializable
+            try:
+                # Convert any Decimal values in cart.cart to float
+                for item in cart.cart.values():
+                    if 'new_price' in item and isinstance(item['new_price'], Decimal):
+                        item['new_price'] = float(item['new_price'])
+                # Save the modified cart to session
+                cart.save()
+            except Exception as e:
+                logger.error(f"Error serializing cart session data: {str(e)}")
+                return JsonResponse({"error": f"Failed to serialize cart data: {str(e)}"}, status=500)
+
+            # Verify Square credentials
+            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
+                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
+                return JsonResponse({"error": "Missing Square credentials"}, status=500)
 
             # Create Square order
             idempotency_key = str(uuid.uuid4())
-            order_body = {
+            order_data = {
                 "order": {
                     "location_id": settings.SQUARE_LOCATION_ID,
                     "line_items": line_items,
@@ -1463,49 +681,193 @@ class CreateCheckoutView(View):
                 },
                 "idempotency_key": idempotency_key
             }
-            logger.debug(f"Order request body: {json.dumps(order_body, indent=2)}")
+            logger.debug(f"Order request body: {json.dumps(order_data, indent=2)}")
 
+            headers = {
+                "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "Square-Version": "2023-10-18"
+            }
             try:
-                order_response = client.orders.create(body=order_body)
-                if order_response.is_success():
-                    order_id = order_response.body['order']['id']
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/orders",
+                    headers=headers,
+                    data=json.dumps(order_data),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    order_id = response.json()['order']['id']
                     logger.debug(f"Order created: {order_id}")
                 else:
-                    logger.error(f"Order creation failed: {order_response.errors}")
-                    return JsonResponse({"error": order_response.errors}, status=400)
-            except Exception as e:
-                logger.error(f"Order creation error: {str(e)}")
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Order creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Order creation HTTP request failed: {str(e)}")
                 return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
 
-            # Create payment link for the order
+            # Create payment link
             payment_link_body = {
                 "idempotency_key": str(uuid.uuid4()),
                 "checkout_options": {
-                    "redirect_url": "http://localhost:8000/cart/checkout/success/"  # Update for production
+                    "redirect_url": "http://localhost:8000/cart/checkout/success/",
+                    "currency": "CAD",  # Match test_payment_link_alt.py
+                    "ask_for_shipping_address": False
                 },
-                "order_id": order_id
+                "order": {
+                    "order_id": order_id,
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items  # Include line_items to match test_payment_link_alt.py
+                }
             }
             logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
 
             try:
-                payment_link_response = client.payment_links.create_payment_link(body=payment_link_body)
-                if payment_link_response.is_success():
-                    checkout_url = payment_link_response.body['payment_link']['url']
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/online-checkout/payment-links",
+                    headers=headers,
+                    data=json.dumps(payment_link_body),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    checkout_url = response.json()['payment_link']['url']
                     logger.debug(f"Checkout URL: {checkout_url}")
-                    # Save order_id in session for later use (e.g., webhook processing)
                     request.session['square_order_id'] = order_id
                     return JsonResponse({"checkout_url": checkout_url})
                 else:
-                    logger.error(f"Payment link creation failed: {payment_link_response.errors}")
-                    return JsonResponse({"error": payment_link_response.errors}, status=400)
-            except Exception as e:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Payment link creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
                 logger.error(f"Payment link creation error: {str(e)}")
                 return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
 
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": str(e)}, status=500)
-        
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+    def get(self, request):
+        try:
+            # Initialize cart
+            cart = Cart(request)
+            logger.debug(f"Cart contents: {cart.cart}")
+
+            # Check for empty cart
+            if not cart.cart:
+                logger.error("Cart is empty")
+                return JsonResponse({"error": "Cart is empty"}, status=400)
+
+            # Prepare line items for Square order
+            line_items = []
+            for item in cart:
+                try:
+                    product = item['product']
+                    quantity = str(item['quantity'])
+                    price = int(float(item['new_price']) * 100)  # Convert to cents
+                    size = item.get('size', '')
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.error(f"Invalid cart item: {str(e)}")
+                    return JsonResponse({"error": f"Invalid cart item: {str(e)}"}, status=400)
+
+                line_item = {
+                    "quantity": quantity,
+                    "name": f"{product.name} ({size})" if size else product.name,
+                    "base_price_money": {
+                        "amount": price,
+                        "currency": "CAD"  # Match test_payment_link_alt.py
+                    }
+                }
+                line_items.append(line_item)
+
+            # Calculate total for validation
+            try:
+                total_amount = int(float(cart.get_total_price()) * 100)  # Convert to cents
+                logger.debug(f"Cart total: {cart.get_total_price()}, Total amount (cents): {total_amount}")
+                if total_amount <= 0:
+                    logger.error("Cart total is zero")
+                    return JsonResponse({"error": "Cart total is zero"}, status=400)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error calculating cart total: {str(e)}")
+                return JsonResponse({"error": f"Invalid cart total: {str(e)}"}, status=400)
+
+            # Verify Square credentials
+            if not settings.SQUARE_ACCESS_TOKEN or not settings.SQUARE_LOCATION_ID:
+                logger.error("Missing Square credentials: ACCESS_TOKEN or LOCATION_ID")
+                return JsonResponse({"error": "Missing Square credentials"}, status=500)
+
+            # Create Square order
+            idempotency_key = str(uuid.uuid4())
+            order_data = {
+                "order": {
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items,
+                    "state": "OPEN"
+                },
+                "idempotency_key": idempotency_key
+            }
+            logger.debug(f"Order request body: {json.dumps(order_data, indent=2)}")
+
+            headers = {
+                "Authorization": f"Bearer {settings.SQUARE_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "Square-Version": "2023-10-18"
+            }
+            try:
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/orders",
+                    headers=headers,
+                    data=json.dumps(order_data),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    order_id = response.json()['order']['id']
+                    logger.debug(f"Order created: {order_id}")
+                else:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Order creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Order creation HTTP request failed: {str(e)}")
+                return JsonResponse({"error": f"Order creation failed: {str(e)}"}, status=500)
+
+            # Create payment link
+            payment_link_body = {
+                "idempotency_key": str(uuid.uuid4()),
+                "checkout_options": {
+                    "redirect_url": "http://localhost:8000/cart/checkout/success/",
+                    "currency": "CAD",  # Match test_payment_link_alt.py
+                    "ask_for_shipping_address": False
+                },
+                "order": {
+                    "order_id": order_id,
+                    "location_id": settings.SQUARE_LOCATION_ID,
+                    "line_items": line_items  # Include line_items to match test_payment_link_alt.py
+                }
+            }
+            logger.debug(f"Payment link request body: {json.dumps(payment_link_body, indent=2)}")
+
+            try:
+                response = requests.post(
+                    "https://connect.squareupsandbox.com/v2/online-checkout/payment-links",
+                    headers=headers,
+                    data=json.dumps(payment_link_body),
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    checkout_url = response.json()['payment_link']['url']
+                    logger.debug(f"Checkout URL: {checkout_url}")
+                    request.session['square_order_id'] = order_id
+                    return JsonResponse({"checkout_url": checkout_url})
+                else:
+                    error_message = response.json().get('errors', ['Unknown error'])
+                    logger.error(f"Payment link creation failed: {error_message}")
+                    return JsonResponse({"error": error_message}, status=response.status_code)
+            except requests.RequestException as e:
+                logger.error(f"Payment link creation error: {str(e)}")
+                return JsonResponse({"error": f"Payment link creation failed: {str(e)}"}, status=500)
+
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
         
 @method_decorator(csrf_exempt, name='dispatch')
 class PaymentWebhookView(APIView):

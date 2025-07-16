@@ -82,7 +82,7 @@ class Product(models.Model):
     sizes = models.JSONField(default=list, blank=True)
     description = models.TextField(blank=True, max_length=250)
     old_price = CommaSeparatedIntegerField(max_digits=10, decimal_places=0, null=True)
-    new_price = models.DecimalField(max_digits=10, decimal_places=0, null=True)
+    new_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     def formatted_price(self):
         return intcomma(self.new_price)
     

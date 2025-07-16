@@ -117,9 +117,13 @@ SQUARE_ENVIRONMENT = SquareEnvironment.SANDBOX  # Use SquareEnvironment.PRODUCTI
 load_dotenv()
 
 
-SQUARE_ACCESS_TOKEN = os.getenv('EAAAl5B86DEy7i6oS5oCgfFaR_-N1d_TYOqIPN7rpf4o9X_YspEJODozLOZ8SnSh')
-SQUARE_LOCATION_ID = os.getenv('LY3CP5ZEYQGVR')
-SQUARE_WEBHOOK_SIGNATURE_KEY = os.getenv('https://ffd1b1bb55c1.ngrok-free.app')
+SQUARE_ACCESS_TOKEN = 'EAAAl5B86DEy7i6oS5oCgfFaR_-N1d_TYOqIPN7rpf4o9X_YspEJODozLOZ8SnSh'
+SQUARE_LOCATION_ID = 'LY3CP5ZEYQGVR'
+SQUARE_WEBHOOK_SIGNATURE_KEY = 'https://ffd1b1bb55c1.ngrok-free.app'
+
+# SQUARE_ACCESS_TOKEN = os.getenv('EAAAl5B86DEy7i6oS5oCgfFaR_-N1d_TYOqIPN7rpf4o9X_YspEJODozLOZ8SnSh')
+# SQUARE_LOCATION_ID = os.getenv('LY3CP5ZEYQGVR')
+# SQUARE_WEBHOOK_SIGNATURE_KEY = os.getenv('https://ffd1b1bb55c1.ngrok-free.app')
 # SQUARE_ENVIRONMENT = SquareEnvironment.SANDBOX
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
