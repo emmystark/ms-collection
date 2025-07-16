@@ -1,0 +1,84 @@
+{% extends 'kobosh/base.html' %}
+{% load static %}
+{% block 'content' %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'kobosh/login&signup.css' %}">
+    <style>
+        .fa-user {
+            color: #2be356;
+        }
+        @media screen and (max-width:767px) {
+            input, label strong {
+                position: relative;
+                left: -15px;
+            }
+            input[type='submit']{
+                position: relative;
+                left: -12px;
+            }
+            .create h2, .create hr {
+                width: 92%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+   
+    <div class="all_forms">
+        <div class="create">
+            <form action="" method="post" style="left: 8px; position: relative;">
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+                {% csrf_token %}
+                <h2>Create An Account</h2>
+                <hr style="left: -9px; position: relative;" id="h2_id">
+                <label for="input">
+                    <strong>Full name</strong>
+                    <br />
+                    <input id="full_name" type="text" name="full_name" /> </label><br /><br />
+                    <label for="input">
+                        <strong>Phone Number</strong>
+                        <br />
+                        <input id="full_name" type="number" name="number" /> </label><br /><br />
+                <label for="input">
+                    <strong>Email</strong>
+                    <br />
+                    <input id="full_name" type="email" name="email" /> </label><br /><br />
+                <label for="input">
+                    <strong>Password</strong>
+                    <br />
+                    <input id="full_name" type="password" name="pass" /> </label><br /><br />
+                <label for="input">
+                    <strong>Confirm Password</strong>
+                    <br />
+                    <input id="full_name" type="password" name="cpass" /> </label><br />
+                <br />
+                <br />
+    
+                <input style="width: 95.4%;" type="submit" value="Create account" class="account_create" />
+            </form>
+            <div class="bottom">
+                <p>By signing up you accept our <a href="#">terms and conditions</a> & <a href="#">privacy policy</a></p>
+    
+                <p>Already have an Account?</p>
+                <input onclick="location.href='{% url 'members:login_user' %}'" style="left: 8px; position: relative;" id="create_acc" type="submit" value="Login">
+    
+                </div>
+        </div>
+    </div>
+</body>
+
+</html>
+{% endblock %}

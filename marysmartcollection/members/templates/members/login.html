@@ -1,0 +1,64 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mary Smart Collection - Fashion eCommerce HTML Template</title>
+    <!-- favicon -->
+    <link rel=icon href="{% static 'assets/img/favicon.png' %}" sizes="20x20" type="image/png">
+    <!-- Vendor Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/vendor.css' %}">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/login.css' %}">
+    <!-- responsive Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+     
+</head>
+
+<body>
+  <div class="container">
+    <form class="login-form">
+      <label for="upload" class="upload-label">
+        <img src="{% static 'assets/img/logo-white.png' %}" alt="Upload Icon" id="uploadPreview" style="background-color: black; padding: 5px;" />
+
+        <input type="file" id="upload" accept="image/*" onchange="previewImage(event)" />
+      </label>
+
+      <h2>Welcome to MarySmart Collections</h2>
+      <p>Type your e-mail or phone number to log in or create an account.</p>
+
+      <input type="email" placeholder="Email or Mobile Number*" required />
+
+      <button type="submit" class="continue-btn">Continue</button>
+
+      <small>By continuing you agree to MarySmart Collections’s <a href="#">Terms and Conditions</a></small>
+
+      <button type="button" class="facebook-btn">Log in with Facebook</button>
+
+      <p class="support-text">For further support, you may visit the Help Center or contact our customer service team.</p>
+
+      <footer>MarySmart Collections</footer>
+    </form>
+  </div>
+
+  <script>
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function(){
+        const output = document.getElementById('uploadPreview');
+        output.src = reader.result;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+  </script>
+</body>
+</html>

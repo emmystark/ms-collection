@@ -1,0 +1,916 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="zxx">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MarySmartCollections - Fashion eCommerce HTML Template</title>
+    <!-- favicon -->
+    <link rel=icon href="{% static 'assets/img/favicon.png' %}" sizes="20x20" type="image/png">
+    <!-- Vendor Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/vendor.css' %}">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <!-- responsive Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+</head>
+<style>
+    #images {
+        max-width: 30%;
+        position: absolute;
+        filter: grayscale(100%) brightness(0%) contrast(150%);
+        top: -49px;
+    }
+</style>
+
+<body>
+
+    <!-- preloader area start -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="spinner">
+                <div class="dot1"></div>
+                <div class="dot2"></div>
+            </div>
+        </div>
+    </div>
+    <!-- preloader area end -->
+
+    <!-- search Popup -->
+    <div class="body-overlay" id="body-overlay"></div>
+    <div class="search-popup" id="search-popup">
+        <form action="{% url 'Ecommerce:search' %}" class="search-form">
+            <div class="form-group">
+                <input name="query" type="text" class="form-control" placeholder="Search.....">
+            </div>
+            <button type="submit" class="submit-btn"><i class="fa fa-search"></i></button>
+        </form>
+    </div>
+    <!-- search Popup end -->
+
+    <!--sidebar menu start-->
+    <div class="sidebar-menu" id="sidebar-menu">
+        <button class="sidebar-menu-close">X</button>
+        <div class="sidebar-inner">
+            <div class="sidebar-logo">
+                <img src="{% static 'assets/img/logo.png' %}" alt="">
+            </div>
+            <div class="sidemenu-text">
+                <p>We believe brand interaction is key in commu- nication. Real inno vations and a positive customer
+                    experience are the heart of successful commu- nication.</p>
+            </div>
+            <div class="sidebar-contact">
+                <h4>Contact Us</h4>
+                <ul>
+                    <li><i class="fa fa-map-marker"></i> </li>
+                    <li><i class="fa fa-envelope"></i>Marysmartcollections@gmail.com</li>
+                    <li><i class="fa fa-phone"></i>+1(780)8632797</li>
+                </ul>
+            </div>
+            <div class="sidebar-subscribe">
+                <input type="text" placeholder="Email">
+                <button><i class="fa fa-long-arrow-right"></i></button>
+            </div>
+            <div class="social-link">
+                <ul>
+                    <li><a href="#"><i class="fa fa-facebook-f"></i></a></li>
+                    <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                    <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                    <li><a href="#"><i class="fa fa-pinterest"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--sidebar menu end-->
+
+    <!-- navbar start -->
+    <div class="stoon-navbar">
+        <div class="header-top d-none d-sm-block">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-lg-4 col-8">
+                        <div class="contact">
+                            <a href="tel:+(1780)8632797"><i class="icon-call-header"></i> +1(780)8632797</a>
+                            <a href="#"><i class="icon-email-subscribe"></i> Marysmartcollections@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-none d-lg-block">
+                        <div class="shipping text-center">
+                            <p>FREE SHIPPING - <span>on all orders over $35*</span></p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-4">
+                        <div class="social">
+                            <ul class="nav-social justify-content-end">
+                                <li><a href="https://vm.tiktok.com/ZMSjn3ey1/"><i class="fab fa-tiktok"></i> TikTok</a>
+                                </li>
+                                <li><a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link"><i
+                                            class="icon-instagram"></i> Instagram</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="navbar navbar-area navbar-expand-lg nav-style-01">
+            <div class="container-fluid nav-container">
+                <div class="row">
+                    <div class="col-lg-3 col-4 order-1 align-self-center">
+                        <div class="logo">
+                            <a href="{% url 'Ecommerce:home' %}"><img id="images"
+                                    src="{% static 'assets/img/logo.png' %}" alt=""></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 order-3 order-lg-2">
+                        <div class="collapse navbar-collapse" id="shop-menu">
+                            <ul class="navbar-nav menu-open">
+                                <li class="">
+                                    <a href="{% url 'Ecommerce:home' %}">Home </a>
+
+                                </li>
+                                <li class="menu-item-has-children">
+                                    <a href="#">Shop <i class="fa fa-angle-down"></i></a>
+                                    <ul class="sub-menu">
+
+                                        <li><a href="{% url 'Ecommerce:collection-full' %}">Shop Full</a></li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item-has-children">
+                                    <a href="#">Pages <i class="fa fa-angle-down"></i></a>
+                                    <ul class="sub-menu">
+                                        <li><a href="{% url 'Ecommerce:blog' %}">Blog</a></li>
+                                        <li><a href="{% url 'cart:cart_detail' %}">Shoping Cart</a></li>
+                                        <li><a href="{% url 'Ecommerce:coming-soon' %}">Coming Soon</a></li>
+                                        <li><a href="{% url 'members:login_user' %}">Log-In Account</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="{% url 'Ecommerce:about' %}">About Us</a></li>
+                                <li><a href="{% url 'Ecommerce:contact' %}">Contact us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-8 justify-content-end d-flex order-2 order-lg-3">
+                        <div class="nav-right-part">
+                            <ul>
+                                <li>
+                                    <a href="#" id="search"><i class="icon-search"></i></a>
+                                </li>
+                                <li>
+                                    <a href="#"><i class="icon-heart"></i><span class="badge">2</span></a>
+                                </li>
+                                <li class="has-dropdown">
+                                    <a href="{% url 'cart:cart_detail' %}"><i class="icon-add-to-cat"></i><span
+                                            class="badge">{{ cart|length }}</span></a>
+                                </li>
+                                <li>
+                                    <a href="#"><i class="icon-user"></i></a>
+                                    <ul class="user-dropdown">
+                                        <li><a href="#">Sign In | Join</a></li>
+                                        <li><a href="{% url 'members:login_user' %}"><i class="icon-user"></i> My
+                                                Account</a></li>
+                                        <li><a href="#"><i class="fa fa-briefcase"></i> My Orders</a></li>
+                                        <li><a href="#"><i class="fa fa-reply"></i> Returns Information</a></li>
+                                        <li><a href="#"><i class="fa fa-commenting-o"></i> Contact Preferences</a></li>
+                                    </ul>
+                                </li>
+                                <li class="d-none d-lg-block">
+                                    <a href="#" id="navigation-button"><i class="icon-bar-icon"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="responsive-mobile-menu">
+                            <div class="menu toggle-btn d-block d-lg-none" data-toggle="collapse"
+                                data-target="#shop-menu" aria-expanded="false" role="button">
+                                <div class="icon-left"></div>
+                                <div class="icon-right"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- navbar end -->
+
+    <!-- breadcrumb start  -->
+    <div class="breadcrumb-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="breadcrumb-inner d-flex justify-content-between">
+                        <h2 class="page-title">Single Product</h2>
+                        <ul class="page-list">
+                            <li><a href="{% url 'Ecommerce:home' %}">Home</a></li>
+                            <li><a href="{% url 'Ecommerce:single-product' %}">Single Product</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- breadcrumb end  -->
+
+    <!-- collection area start  -->
+    <div class="collection-area margin-top-60">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9 col-md-12">
+                    <div class="row">
+                        <div class="col-lg-5 col-md-6">
+                            <div class="slider-tabfor margin-top-20">
+                                <div class="single-item">
+                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                </div>
+                                <div class="single-item">
+                                    <img src="{% if product.image %}{{ product.image1.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                </div>
+                                <div class="single-item">
+                                    <img src="{% if product.image %}{{ product.image2.url }}{% else %}
+                                    {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                </div>
+                                <div class="single-item">
+                                    <img src="{% if product.image %}{{ product.image.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                </div>
+                                <div class="single-item">
+                                    <img src="{% if product.image %}{{ product.image1.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                </div>
+                            </div>
+                            <div class="slider-tabnav">
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image2.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image1.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image2.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                                <div class="single-item">
+                                    <div class="img">
+                                        <img src="{% if product.image %}{{ product.image1.url }}{% else %}
+            {% static 'img/no_image.png' %}{% endif %}" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 col-md-6">
+                            <div class="content-part margin-top-20">
+                                <h3 class="product-title">{{ product.name}}</h3>
+                                <p class="price">${{ product.new_price }}</p>
+                                <span class="rating ml-0">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-half-o"></i>
+                                </span>
+                                <span class="review-text">3 reviews</span>
+                                <p class="specifications">SKU: <b>0014</b></p>
+                                <p class="specifications">VENDOR: <b>MS Collection</b></p>
+                                <p class="specifications">AVAILABILITY: <b class="color-green">In Stock</b></p>
+                                <!-- <div class="d-flex">
+                                    <span class="specifications">SIZE: </span>
+                                    <ul class="size-list align-self-center pl-3">
+                                        <li><a href="#" class="size-option" data-size="S">S</a></li>
+                                        <li><a href="#" class="size-option" data-size="M">M</a></li>
+                                        <li><a href="#" class="size-option" data-size="X">X</a></li>
+                                        <li><a href="#" class="size-option" data-size="XL">XL</a></li>
+                                    </ul>
+                                </div> -->
+                                <form action="{% url 'cart:cart_add' product.id %}" method="post" id="quantity">
+                                    {{ cart_product_form }}
+                                <div class="d-flex">
+                                    <span class="specifications">COLOR: </span>
+                                    <ul class="color-list align-self-center">
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                        <li><a href="#"></a></li>
+                                    </ul>
+                                </div>
+                                <p class="specifications">MATERIAL: Cotton, Wool, Silk</p>
+                                <div class="btn-wrapper d-flex">
+                                    <!-- <div class="input-group">
+                                        <div class="input-group-prepend align-self-center">
+                                            <a class="btn btn-sm" id="minus-btn"><i class="fa fa-minus"></i></a>
+                                        </div>
+                                        <input type="number" id="qty_input" class="form-control text-right form-control-sm" value="1" min="1">
+                                        <div class="input-group-prepend align-self-center">
+                                            <a class="btn btn-sm" id="plus-btn"><i class="fa fa-plus"></i></a>
+                                        </div>
+                                    </div> -->
+                                    
+                                        <!-- <br> -->
+                                        {% csrf_token %}
+
+                                        <!-- <i class="icon-add-to-cat"></i>  -->
+                                        <input style="cursor: pointer; border: none; margin: 0;" type="submit"
+                                            class="add-to-cart" name="" id="cartbtn" value="Add to Cart">
+
+
+                                        </div>
+                                    </form>
+                                <div class="btn-wrapper">
+                                    <a href="#" class="btn btn-buy">Buy it now</a>
+                                </div>
+                                <p class="specifications">CATEGORY: <b>Men, Blazer</b></p>
+                                <p class="specifications">TAG: <b>Men, Blazer, Casual, Classic, Elegant</b></p>
+                                <div class="d-flex">
+                                    <span class="specifications">SHARE:</span>
+                                    <ul class="social-list">
+                                        <li><a href="#"><i class="fa fa-facebook-f"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-pinterest"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="product-tab">
+                                <ul class="nav nav-pills">
+                                    <li><a data-toggle="pill" href="#home" class="active">DESCRIPTION</a></li>
+                                    <li><a data-toggle="pill" href="#menu1">ADITIONAL INFORMATION</a></li>
+                                    <li><a data-toggle="pill" href="#menu2">SHIPPING</a></li>
+                                    <li><a data-toggle="pill" href="#menu3">WHY BUY FROM US</a></li>
+                                    <li><a data-toggle="pill" href="#menu4">REVIEWS</a></li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div id="home" class="tab-pane fade in show active">
+                                        <p>Silver, metallic-blue and metallic-lavender silk-blend jacquard, graphic
+                                            pattern, pleated ruffle along collar, long sleeves with button-fastening
+                                            cuffs, buckle-fastening silver skinny belt, large pleated rosettes at hips.
+                                            Dry clean. Zip and hook fastening at back. 100% silk. Specialist clean</p>
+
+                                        <ul class="tab-list">
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Lightweight
+                                                    soft-touch woven</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> High-rise waist</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Zip fly with hook
+                                                    and button fastening</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Slip pockets</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Waist belt</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Relaxed fit</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Machine wash</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> 76% Polyester, 18%
+                                                    Viscose, 6% Elastane</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Our model wears a UK
+                                                    8/ EU 36/ US 4 and is 174 cm/5'8.5” tall</a></li>
+                                        </ul>
+                                    </div>
+                                    <div id="menu1" class="tab-pane fade">
+                                        <p>Silver, metallic-blue and metallic-lavender silk-blend jacquard, graphic
+                                            pattern, pleated ruffle along collar, long sleeves with button-fastening
+                                            cuffs, buckle-fastening silver skinny belt, large pleated rosettes at hips.
+                                            Dry clean. Zip and hook fastening at back. 100% silk. Specialist clean</p>
+
+                                        <ul class="tab-list">
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Lightweight
+                                                    soft-touch woven</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> High-rise waist</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Zip fly with hook
+                                                    and button fastening</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Slip pockets</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Waist belt</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Relaxed fit</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Machine wash</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> 76% Polyester, 18%
+                                                    Viscose, 6% Elastane</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Our model wears a UK
+                                                    8/ EU 36/ US 4 and is 174 cm/5'8.5” tall</a></li>
+                                        </ul>
+                                    </div>
+                                    <div id="menu2" class="tab-pane fade">
+                                        <p>Silver, metallic-blue and metallic-lavender silk-blend jacquard, graphic
+                                            pattern, pleated ruffle along collar, long sleeves with button-fastening
+                                            cuffs, buckle-fastening silver skinny belt, large pleated rosettes at hips.
+                                            Dry clean. Zip and hook fastening at back. 100% silk. Specialist clean</p>
+
+                                        <ul class="tab-list">
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Lightweight
+                                                    soft-touch woven</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> High-rise waist</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Zip fly with hook
+                                                    and button fastening</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Slip pockets</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Waist belt</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Relaxed fit</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Machine wash</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> 76% Polyester, 18%
+                                                    Viscose, 6% Elastane</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Our model wears a UK
+                                                    8/ EU 36/ US 4 and is 174 cm/5'8.5” tall</a></li>
+                                        </ul>
+                                    </div>
+                                    <div id="menu3" class="tab-pane fade">
+                                        <p>Silver, metallic-blue and metallic-lavender silk-blend jacquard, graphic
+                                            pattern, pleated ruffle along collar, long sleeves with button-fastening
+                                            cuffs, buckle-fastening silver skinny belt, large pleated rosettes at hips.
+                                            Dry clean. Zip and hook fastening at back. 100% silk. Specialist clean</p>
+
+                                        <ul class="tab-list">
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Lightweight
+                                                    soft-touch woven</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> High-rise waist</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Zip fly with hook
+                                                    and button fastening</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Slip pockets</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Waist belt</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Relaxed fit</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Machine wash</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> 76% Polyester, 18%
+                                                    Viscose, 6% Elastane</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Our model wears a UK
+                                                    8/ EU 36/ US 4 and is 174 cm/5'8.5” tall</a></li>
+                                        </ul>
+                                    </div>
+                                    <div id="menu4" class="tab-pane fade">
+                                        <p>Silver, metallic-blue and metallic-lavender silk-blend jacquard, graphic
+                                            pattern, pleated ruffle along collar, long sleeves with button-fastening
+                                            cuffs, buckle-fastening silver skinny belt, large pleated rosettes at hips.
+                                            Dry clean. Zip and hook fastening at back. 100% silk. Specialist clean</p>
+
+                                        <ul class="tab-list">
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Lightweight
+                                                    soft-touch woven</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> High-rise waist</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Zip fly with hook
+                                                    and button fastening</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Slip pockets</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Waist belt</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Relaxed fit</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Machine wash</a>
+                                            </li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> 76% Polyester, 18%
+                                                    Viscose, 6% Elastane</a></li>
+                                            <li><a href="#"><i class="icon-right-arrow-slider"></i> Our model wears a UK
+                                                    8/ EU 36/ US 4 and is 174 cm/5'8.5” tall</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-12">
+                    <div class="widget delivery-widget margin-top-20">
+                        <div class="single-delivery-item">
+                            <div class="d-flex">
+                                <i class="icon-delivery-car"></i>
+                                <h4>Delivery</h4>
+                            </div>
+                            <span>Free shipping on orders over $89.</span>
+                        </div>
+                        <div class="single-delivery-item">
+                            <div class="d-flex">
+                                <i class="icon-phone-support"></i>
+                                <h4>Support 24/7</h4>
+                            </div>
+                            <span>Contact us 24 hours a day, 7 days a week.</span>
+                        </div>
+                        <div class="single-delivery-item">
+                            <div class="d-flex">
+                                <i class="icon-money-back"></i>
+                                <h4>Return</h4>
+                            </div>
+                            <span>Simply return it within 30 days for an exchange.</span>
+                        </div>
+                    </div>
+                    <div class="widget checkout-widget">
+                        <h4 class="widget-title">GUARANTED SAFE CHECKOUT</h4>
+                        <ul class="checkout-list">
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p1.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p2.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p3.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p4.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p5.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p6.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/p7.png' %}" alt=""></a></li>
+                        </ul>
+                    </div>
+                    <div class="widget">
+                        <a href="#"><img src="{% static 'assets/img/others/add1.png' %}" alt=""></a>
+                    </div>
+                    <div class="widget seller-widget">
+                        <h4 class="widget-title">Top Products</h4>
+                        <div class="seller-content">
+                            <div class="single-seller-content d-flex">
+                                <div class="thumb">
+                                    <img src="{% static 'assets/img/seller/1.png' %}" alt="">
+                                </div>
+                                <div class="content">
+                                    <h6>Men's Crew T-shirt</h6>
+                                    <span>$35.00</span>
+                                </div>
+                            </div>
+                            <div class="single-seller-content d-flex">
+                                <div class="thumb">
+                                    <img src="{% static 'assets/img/seller/2.png' %}" alt="">
+                                </div>
+                                <div class="content">
+                                    <h6>Men's V-neck Pima</h6>
+                                    <span>$35.00</span>
+                                </div>
+                            </div>
+                            <div class="single-seller-content d-flex">
+                                <div class="thumb">
+                                    <img src="{% static 'assets/img/seller/3.png' %}" alt="">
+                                </div>
+                                <div class="content">
+                                    <h6>Men's Crew T-shirt</h6>
+                                    <span>$35.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- collection area end  -->
+
+    <!-- related product start  -->
+    <div class="related-product-section">
+        <div class="container">
+            <div class="related-product">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="title">
+                            <h2>RELATED PRODUCTS</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="related-slider">
+                            <div class="product-style-03 margin-top-30">
+                                <div class="thumb text-center">
+                                    <img src="{% static 'assets/img/shop/3.png' %}" alt="">
+                                    <span class="sale">Sale! 13%</span>
+                                    <span class="new margin-top-35">New</span>
+                                </div>
+                                <div class="content text-center">
+                                    <span class="brand">Brand: MS Collection</span>
+                                    <ul class="justify-content-center margin-bottom-20">
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                    </ul>
+                                    <h6 class="title"><a href="#">Faxon Canvas Low-Top Sneaker</a></h6>
+                                    <span class="price">$400.00</span>
+                                </div>
+                            </div>
+                            <div class="product-style-03 margin-top-30">
+                                <div class="thumb text-center">
+                                    <img src="{% static 'assets/img/shop/9.png' %}" alt="">
+                                    <span class="new">New</span>
+                                </div>
+                                <div class="content text-center">
+                                    <span class="brand">Brand: MS Collection</span>
+                                    <ul class="justify-content-center margin-bottom-20">
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                    </ul>
+                                    <h6 class="title"><a href="#">Faxon Canvas Low-Top Sneaker</a></h6>
+                                    <span class="price">$400.00</span>
+                                </div>
+                            </div>
+                            <div class="product-style-03 margin-top-30">
+                                <div class="thumb text-center">
+                                    <img src="{% static 'assets/img/shop/5.png' %}" alt="">
+                                </div>
+                                <div class="content text-center">
+                                    <span class="brand">Brand: MS Collection</span>
+                                    <ul class="justify-content-center margin-bottom-20">
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                    </ul>
+                                    <h6 class="title"><a href="#">Faxon Canvas Low-Top Sneaker</a></h6>
+                                    <span class="price">$400.00</span>
+                                </div>
+                            </div>
+                            <div class="product-style-03 margin-top-30">
+                                <div class="thumb text-center">
+                                    <img src="{% static 'assets/img/shop/4.png' %}" alt="">
+                                    <span class="new">New</span>
+                                </div>
+                                <div class="content text-center">
+                                    <span class="brand">Brand: MS Collection</span>
+                                    <ul class="justify-content-center margin-bottom-20">
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                    </ul>
+                                    <h6 class="title"><a href="#">Faxon Canvas Low-Top Sneaker</a></h6>
+                                    <span class="price">$400.00</span>
+                                </div>
+                            </div>
+                            <div class="product-style-03 margin-top-30">
+                                <div class="thumb text-center">
+                                    <img src="{% static 'assets/img/shop/12.png' %}" alt="">
+                                </div>
+                                <div class="content text-center">
+                                    <span class="brand">Brand: MS Collection</span>
+                                    <ul class="justify-content-center margin-bottom-20">
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                        <li><a href="#"><i class="fa fa-star-o"></i></a></li>
+                                    </ul>
+                                    <h6 class="title"><a href="#">Faxon Canvas Low-Top Sneaker</a></h6>
+                                    <span class="price">$400.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- related product end  -->
+
+    <!-- instagram start -->
+    <div class="instagram-area margin-top-75">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <div class="instagram-title margin-bottom-40">
+                        <h4><span>@ <a href="#">FOLLOW</a></span> US ON INSTAGRAM</h4>
+                        <h6>shop our instagram</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="instagram-slider">
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/1.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/2.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/3.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/4.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/5.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- instagram end -->
+
+    <!-- footer area start -->
+    <footer class="footer-area footer-style-1 padding-top-70 margin-top-70">
+        <div class="footer-top padding-bottom-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">CATEGORIES</h4>
+                            <ul>
+
+                                <li><a href="{% url 'Ecommerce:home' %}">Women</a></li>
+                                <li><a href="{% url 'Ecommerce:home' %}">Girls</a></li>
+
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">OUR POLICY</h4>
+                            <ul>
+
+                                <li><a href="{% url 'Ecommerce:contact' %}">Contact Us</a></li>
+
+                                <li><a href="{% url 'members:login_user' %}">My Account</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="widget contact-widget">
+                            <h4 class="widget-title">GET IN TOUCH</h4>
+                            <ul class="contact_info_list">
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-home-foother"></i>
+                                    </div>
+                                    <div class="details">
+                                        <span>Edmonton Alberta.<br>P.O. Box 16023 13 Ave SW. <br>T6W 3N6rfv </span>
+                                    </div>
+                                </li>
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-email-subscribe"></i>
+                                    </div>
+                                    <div class="details">
+                                        Marysmartcollections@gmail.com
+                                    </div>
+                                </li>
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-call-footer"></i>
+                                    </div>
+                                    <div class="details">
+                                        <a href="tel:+17808632797">+1(780)8632797</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">FOLLOW US</h4>
+                            <ul>
+                                <li><a href="https://vm.tiktok.com/ZMSjn3ey1/"><i class="fab fa-tiktok"></i> TikTok</a>
+                                </li>
+                                <li><a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link"><i
+                                            class="icon-instagram"></i> Instagram</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p>© Marysmartcollections 2020. Powered with <i class="fa fa-heart"></i> by <a
+                                href="http://chinazaportfollio.vercel.app" target="_blanc"></a>.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/1.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/2.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/3.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="'{% static 'assets/img/payment/4.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/5.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/6.png' %}" alt=""></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- footer area end -->
+
+    <!-- back to top area start -->
+    <div class="back-to-top">
+        <span class="back-top"><i class="fa fa-angle-up"></i></span>
+    </div>
+    <!-- back to top area end -->
+
+    <!-- all plugins here -->
+    <script src="{% static 'assets/js/vendor.js' %}"></script>
+    <!-- main js  -->
+    <script src="{% static 'assets/js/main.js' %}"></script>
+
+    <!-- <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sizeOptions = document.querySelectorAll('.size-option');
+    const selectedSizeInput = document.getElementById('selected-size');
+    const form = document.getElementById('quantity');
+    const errorDiv = document.getElementById('form-error');
+
+    // Handle size selection
+    sizeOptions.forEach(option => {
+        option.addEventListener('click', function (e) {
+            e.preventDefault();
+            sizeOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            selectedSizeInput.value = this.getAttribute('data-size');
+            console.log('Selected size:', selectedSizeInput.value); // Debug
+        });
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!selectedSizeInput.value) {
+            if (errorDiv) {
+                errorDiv.textContent = 'Please select a size.';
+                errorDiv.style.display = 'block';
+            } else {
+                alert('Please select a size.');
+            }
+            return;
+        }
+
+        const formData = new FormData(form);
+        console.log('Form data:', Object.fromEntries(formData)); // Debug
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(response => {
+            console.log('Response status:', response.status); // Debug
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Debug
+            if (data.success) {
+                if (errorDiv) errorDiv.style.display = 'none';
+                alert(data.message); // Update UI or redirect
+                window.location.href = "{% url 'cart:cart_detail' %}";
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = Object.values(data.errors).flat().join(' ');
+                    errorDiv.style.display = 'block';
+                } else {
+                    alert('Error: ' + Object.values(data.errors).flat().join(' '));
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            if (errorDiv) {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+});
+</script> -->
+
+</body>
+
+
+</html>

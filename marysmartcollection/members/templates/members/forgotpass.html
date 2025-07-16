@@ -1,0 +1,40 @@
+{% extends 'kobosh/base.html' %}
+
+{% load static %}
+{% block 'content' %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'kobosh/login&signup.css' %}">
+    <style>
+        .fa-user {
+            color: #2be356;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="all_forms">
+        <div class="reset create">
+            <form action="" method="post">
+                {% csrf_token %}
+                <h2>Forgot Password</h2>
+                <label for="input">
+                    <strong>Reset email</strong>
+                    <br>
+                    <input id="full_name" type="email">
+                </label><br><br>
+                <input type="submit" value="Send reset mail" style="width: 96%;" class="account_create">
+    
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
+{% endblock %}

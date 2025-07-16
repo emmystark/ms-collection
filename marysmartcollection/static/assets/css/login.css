@@ -1,0 +1,116 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+body {
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.upload-label {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.upload-label img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #FF8E78 ;
+}
+
+.upload-label input {
+  display: none;
+}
+
+.login-form h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.login-form p {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #333;
+}
+
+.login-form input[type="email"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.continue-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #FF8E78;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.continue-btn:hover {
+  background-color: #FF8E78;
+}
+
+.login-form small {
+  display: block;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 12px;
+}
+
+.login-form small a {
+  color: #0077cc;
+  text-decoration: none;
+}
+
+.facebook-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #1877f2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.support-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+  font-weight: bold;
+  color: #FF8E78;
+  margin-top: 15px;
+}
