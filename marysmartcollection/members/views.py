@@ -27,7 +27,7 @@ def login_user(request,category_slug=None):
             return redirect('kobosh:home')
         else:
             messages.error(request, "There was an error logging in. Please try again.")
-            return redirect('members:login_user')
+            return redirect('accounts:login_user')
 
     context = {
         'category' : category,
@@ -36,7 +36,7 @@ def login_user(request,category_slug=None):
         }
     
    
-    return render(request, 'members/login.html', context)
+    return render(request, 'registration/login.html', context)
 
 
 def signup_user(request,category_slug=None):
@@ -59,25 +59,25 @@ def signup_user(request,category_slug=None):
         # Check if passwords match
         if password != password1:
             messages.error(request, "Passwords do not match. Please try again.")
-            return redirect('members:signup_user')
+            return redirect('accounts:signup')
 
         # Validate password
         try:
             validate_password(password)
         except Exception as e:
             messages.error(request, str(e))
-            return redirect('members:signup_user')
+            return redirect('accounts:signup')
 
         # Check if email already exists
         if CustomUser.objects.filter(email=email).exists():
             messages.error(request, "Email already exists. Please use a different email.")
-            return redirect('members:signup_user')
+            return redirect('accounts:signup')
 
         # Create the user
         user = CustomUser.objects.create_user(email=email, password=password, number=number, full_name=full_name)
         user.save()
 
-        return redirect('members:login_user')
+        return redirect('accounts:login')
 
     
     context = {
@@ -87,7 +87,7 @@ def signup_user(request,category_slug=None):
         }
 
 
-    return render(request, 'members/signup.html', context)
+    return render(request, 'registration/signup.html', context)
 
 def forgotpass(request,category_slug=None):
     category = None
@@ -106,7 +106,7 @@ def forgotpass(request,category_slug=None):
         'categories': categories,
         'products': products
         }
-    return render(request, 'members/forgotpass.html', context)
+    return render(request, 'registration/forgotpass.html', context)
 
 
 
@@ -126,5 +126,5 @@ def profile(request):
         }
     else:
         # Handle the case where the user is not authenticated (e.g., redirect to login page)
-        return redirect('members:login_user') 
-    return render(request, 'members/profilePage.html', context)
+        return redirect('accounts:login') 
+    return render(request, 'registration/profilePage.html', context)

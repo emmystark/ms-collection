@@ -26,10 +26,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('Ecommerce.urls')),
     path('cart/', include('cart.urls', namespace='cart')),
-    path('members/', include('django.contrib.auth.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
     
     # Members URLs
-    path('members/', include('members.urls', namespace='members')),
+    path('accounts/', include('members.urls', namespace='accounts')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
