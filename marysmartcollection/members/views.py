@@ -24,7 +24,7 @@ def login_user(request,category_slug=None):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            return redirect('kobosh:home')
+            return redirect('Ecommerce:home')
         else:
             messages.error(request, "There was an error logging in. Please try again.")
             return redirect('accounts:login_user')

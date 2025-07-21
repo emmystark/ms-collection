@@ -155,7 +155,7 @@
                                         <li><a href="{% url 'Ecommerce:single-product' %}">Single Product</a></li>
                                         <li><a href="{% url 'cart:cart_detail' %}">Shopping Cart</a></li>
                                         <li><a href="{% url 'Ecommerce:coming-soon' %}">Coming Soon</a></li>
-                                        <li><a href="{% url 'members:login_user' %}">Log-In Account</a></li>
+                                        <li><a href="{% url 'accounts:login' %}">Log-In Account</a></li>
                                     </ul>
                                 </li>
                                 <li><a href="{% url 'Ecommerce:about' %}">About Us</a></li>
@@ -174,8 +174,8 @@
                                 <li>
                                     <a href="#"><i class="icon-user"></i></a>
                                     <ul class="user-dropdown">
-                                        <li><a href="{% url 'members:login_user' %}">Sign In | Join</a></li>
-                                        <li><a href="{% url 'members:login_user' %}"><i class="icon-user"></i> My Account</a></li>
+                                        <li><a href="{% url 'accounts:login' %}">Sign In | Join</a></li>
+                                        <li><a href="{% url 'accounts:login' %}"><i class="icon-user"></i> My Account</a></li>
                                         <li><a href="#"><i class="fa fa-briefcase"></i> My Orders</a></li>
                                         <li><a href="#"><i class="fa fa-reply"></i> Returns Information</a></li>
                                         <li><a href="#"><i class="fa fa-commenting-o"></i> Contact Preferences</a></li>
@@ -336,7 +336,7 @@
                                 </div>
                             </form>
                             <div class="btn-wrapper">
-                                <!-- <a href="{% url 'members:login_user' %}" class="btn btn-checkout">Proceed To Checkout</a> -->
+                                <!-- <a href="{% url 'accounts:login' %}" class="btn btn-checkout">Proceed To Checkout</a> -->
                                 <a href="{% url 'cart:checkout' %}" class="btn btn-checkout">Proceed To Checkout</a>
                             </div>
                             <h6 class="subtitle text-center">Checkout with Multiple Addresses</h6>
@@ -405,7 +405,7 @@
                                 <h4 class="widget-title">OUR POLICY</h4>
                                 <ul>
                                     <li><a href="{% url 'Ecommerce:contact' %}">Contact Us</a></li>
-                                    <li><a href="{% url 'members:login_user' %}">My Account</a></li>
+                                    <li><a href="{% url 'accounts:login' %}">My Account</a></li>
                                 </ul>
                             </div>
                         </div>

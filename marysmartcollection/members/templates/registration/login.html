@@ -26,7 +26,8 @@
 
 <body>
   <div class="container">
-    <form class="login-form">
+    <form class="login-form" action="{% url 'cart:checkout' %}" method="post">
+      {% csrf_token %}
       <label for="upload" class="upload-label">
         <img src="{% static 'assets/img/logo-white.png' %}" alt="Upload Icon" id="uploadPreview" style="background-color: black; padding: 5px;" />
 
@@ -36,7 +37,8 @@
       <h2>Welcome to MarySmart Collections</h2>
       <p>Type your e-mail or phone number to log in or create an account.</p>
 
-      <input type="email" placeholder="Email or Mobile Number*" required />
+      <input type="email" name="email" placeholder="Email or Mobile Number" required />
+      <!-- <input type="password" name="password" placeholder="Password" required /> -->
 
       <button type="submit" class="continue-btn">Continue</button>
 
