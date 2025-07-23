@@ -26,10 +26,10 @@
 
 <style>
     #images{
-        max-width: 30%;
+        max-width: 35%;
         position: absolute;
         filter: grayscale(100%) brightness(0%) contrast(150%);
-        top: -49px;
+        top: -28px;
     }
     </style>
 <body>
@@ -160,7 +160,7 @@
                                     <a href="#" id="search"><i class="icon-search"></i></a>
                                 </li>
                                 <li>
-                                    <a href="#"><i class="icon-heart"></i><span class="badge">2</span></a>
+                                    <a href="#"><i class="icon-heart"></i><span class="badge"></span></a>
                                 </li>
                                 <li class="has-dropdown">
                                     <a href="{% url 'cart:cart_detail' %}"><i class="icon-add-to-cat"></i><span class="badge">{{ cart|length }}</span></a>
@@ -220,7 +220,8 @@
                         <div class="col-md-12">
                             <div class="single-blog">
                                 <div class="thumb">
-                                    <img src="{% static 'assets/img/blog/10.png' %} " alt="">
+                                   <img src="{% static 'assets/img/blog/11_new.png' %}?v=1" alt="Blog Image">
+
                                     <span class="tag">lifestyle</span>
                                 </div>
                                 <div class="content">
@@ -318,40 +319,38 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="banner margin-top-20">
-                        <a href="#"><img src="{% static 'assets/img/others/add1.png' %}" alt=""></a>
-                    </div>
+                  
                     <div class="seller-widget margin-top-20">
                         <h4 class="widget-title">Best sellers</h4>
                         <div class="seller-content">
                             <div class="single-seller-content d-flex">
                                 <div class="thumb">
-                                    <img src="{% static 'assets/img/seller/1.png' %}" alt="">
+                                   <img src="{% static 'assets/img/seller/1_new.jpg' %}?v=1" alt="">
+
                                 </div>
                                 <div class="content">
-                                    <h6><a href="#">Men's Crew T-shirt</a></h6>
+                                    <h6><a href="#">MS Collections</a></h6>
                                     <span>$35.00</span>
                                 </div>
                             </div>
                             <div class="single-seller-content d-flex">
                                 <div class="thumb">
-                                    <img src="{% static 'assets/img/seller/2.png' %}" alt="">
+                                     <img src="{% static 'assets/img/seller/3_new.jpg' %}?v=1" alt="">
                                 </div>
                                 <div class="content">
-                                    <h6><a href="#">Men's V-neck Pima</a></h6>
+                                    <h6><a href="#">MS Collections</a></h6>
                                     <span>$35.00</span>
                                 </div>
                             </div>
-                            <div class="single-seller-content d-flex">
+                             <div class="single-seller-content d-flex">
                                 <div class="thumb">
-                                    <img src="{% static 'assets/img/seller/3.png' %}" alt="">
+                                     <img src="{% static 'assets/img/seller/4_new.jpg' %}?v=1" alt="">
                                 </div>
                                 <div class="content">
-                                    <h6><a href="#">Men's Crew T-shirt</a></h6>
+                                    <h6><a href="#">MS Collections</a></h6>
                                     <span>$35.00</span>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>

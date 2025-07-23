@@ -24,14 +24,38 @@
      
 </head>
 
+<!--<style>
+    #images {
+        width: 60%;
+        max-width: 60%;
+        height: auto;
+        filter: grayscale(100%) brightness(0%) contrast(150%);
+        position: relative;
+        top: 0;
+        display: block;
+        margin: 0 auto;
+    }
+
+    /* Desktop styles */
+    @media (min-width: 768px) {
+        #images {
+            max-width: 20%;
+            position: absolute;
+            top: -39px;
+        }
+    }
+</style> -->
+
 <style>
     #images{
-        max-width: 30%;
+        max-width: 35%;
         position: absolute;
         filter: grayscale(100%) brightness(0%) contrast(150%);
-        top: -49px;
+        top: -28px;
     }
     </style>
+
+
 <body>
 
     <!-- preloader area start -->
@@ -168,7 +192,7 @@
                                     <a href="#" id="search"><i class="icon-search"></i></a>
                                 </li>
                                 <li>
-                                    <a href="#"><i class="icon-heart"></i><span class="badge">2</span></a>
+                                    <a href="#"><i class="icon-heart"></i><span class="badge"></span></a>
                                 </li>
                                 <li class="has-dropdown">
                                     <a href="{% url 'cart:cart_detail' %}"><i class="icon-add-to-cat"></i><span class="badge">{{ cart|length }}</span></a>
@@ -704,7 +728,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-md-6 align-self-center">
-                        <p>© Marysmartcollections 2020. Powered with <i class="fa fa-heart"></i> by <a href="http://chinazaportfollio.vercel.app" target="_blanc">Zwin</a>.</p>
+                        <p>© Marysmartcollections 2020. Powered with <i class="fa fa-heart"></i> by <a href="http://chinazaportfollio.vercel.app" target="_blanc">MS Collections</a>.</p>
                     </div>
                     <div class="col-md-6">
                         <ul>
