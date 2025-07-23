@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Stooon - Fashion eCommerce HTML Template</title>
+    <title>MS Collections - Fashion eCommerce HTML Template</title>
     <!-- favicon -->
     <link rel="icon" href="{% static 'assets/img/favicon.png' %}" sizes="20x20" type="image/png">
     <!-- Vendor Stylesheet -->
@@ -19,7 +19,14 @@
     <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    
+
+    
+    
+    
     <style>
+    
         #images {
             max-width: 30%;
             position: absolute;
@@ -82,9 +89,9 @@
             <div class="sidebar-contact">
                 <h4>Contact Us</h4>
                 <ul>
-                    <li><i class="fa fa-map-marker"></i>Lavaca Street, Suite 2000</li>
-                    <li><i class="fa fa-envelope"></i>email@evha.com</li>
-                    <li><i class="fa fa-phone"></i>(+880) 172570051</li>
+                    <li><i class="fa fa-map-marker"></i>Edmonton Alberta.</li>
+                    <li><i class="fa fa-envelope"></i> Marysmartcollections@gmail.com</li>
+                    <li><i class="fa fa-phone"></i>+1(780)8632797</li>
                 </ul>
             </div>
             <div class="sidebar-subscribe">
@@ -152,7 +159,7 @@
                                     <a href="#">Pages <i class="fa fa-angle-down"></i></a>
                                     <ul class="sub-menu">
                                         <li><a href="{% url 'Ecommerce:blog' %}">Blog</a></li>
-                                        <li><a href="{% url 'Ecommerce:single-product' %}">Single Product</a></li>
+                                        
                                         <li><a href="{% url 'cart:cart_detail' %}">Shopping Cart</a></li>
                                         <li><a href="{% url 'Ecommerce:coming-soon' %}">Coming Soon</a></li>
                                         <li><a href="{% url 'accounts:login' %}">Log-In Account</a></li>
@@ -167,7 +174,7 @@
                         <div class="nav-right-part">
                             <ul>
                                 <li><a href="#" id="search"><i class="icon-search"></i></a></li>
-                                <li><a href="#"><i class="icon-heart"></i><span class="badge">2</span></a></li>
+                                <li><a href="#"><i class="icon-heart"></i><span class="badge"></span></a></li>
                                 <li class="has-dropdown">
                                     <a href="{% url 'cart:cart_detail' %}"><i class="icon-add-to-cat"></i><span class="badge">{{ cart|length }}</span></a>
                                 </li>
@@ -248,12 +255,12 @@
                                                 </th>
                                                 <td>${{ item.new_price }}</td>
                                                 <td>
-                                                    <form class="quantity-form" data-product-id="{{ product.id }}">
+                                                 <form class="quantity-form" data-product-id="{{ product.id }}">
                                                         {% csrf_token %}
                                                         <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control d-inline-block">
                                                         <input type="hidden" name="override" value="true">
-                                                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                                                    </form>
+                                                           <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                                    </form> 
                                                 </td>
                                                 <td>${{ item.total_price }}</td>
                                                 <td>
@@ -348,43 +355,50 @@
         <!-- cart area end -->
 
         <!-- instagram start -->
-        <div class="instagram-area margin-top-75">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <div class="instagram-title margin-bottom-40">
-                            <h4><span>@ <a href="#">FOLLOW</a></span> US ON INSTAGRAM</h4>
-                            <h6>shop our instagram</h6>
-                        </div>
+    <div class="instagram-area margin-top-75">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <div class="instagram-title margin-bottom-40">
+                        <h4> <span>
+    @ <a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link" target="_blank">FOLLOW</a>
+  </span>
+  US ON INSTAGRAM
+</h4>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="instagram-slider">
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/1.png' %}" alt="">
-                            </div>
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/2.png' %}" alt="">
-                            </div>
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/3.png' %}" alt="">
-                            </div>
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/4.png' %}" alt="">
-                            </div>
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/5.png' %}" alt="">
-                            </div>
-                            <div class="thumb">
-                                <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
-                            </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="instagram-slider2">
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/1.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/2.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/3.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/4.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/5.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- instagram end -->
+    </div>
+    <!-- instagram end -->
+
 
         <!-- footer area start -->
         <footer class="footer-area footer-style-1 padding-top-70 margin-top-70">
