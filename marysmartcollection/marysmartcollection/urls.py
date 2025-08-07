@@ -27,9 +27,13 @@ urlpatterns = [
     path('', include('Ecommerce.urls', namespace='Ecommerce')),
     path('cart/', include('cart.urls', namespace='cart')),
     path('accounts/', include('django.contrib.auth.urls')),
+     path('alteration/', include('alteration.urls')),
     
     # Members URLs
     path('accounts/', include('members.urls', namespace='accounts')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+from django.conf import settings
+from django.conf.urls.static import static
+
