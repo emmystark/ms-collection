@@ -1,8 +1,827 @@
 {% extends 'alteration/base.html' %}
 {% load static %}
-
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Mary Smart Collection - Fashion eCommerce HTML Template</title>
+   
+     <!-- favicon -->
+    <link rel=icon href="{% static 'assets/img/favicon.png' %}" sizes="20x20" type="image/png">
+    <!-- Vendor Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/vendor.css' %}">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+    <!-- responsive Stylesheet -->
+    <link rel="stylesheet" href="{% static 'assets/css/responsive.css' %}">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+
+         #images{
+        max-width: 35%;
+        position: absolute;
+        filter: grayscale(100%) brightness(0%) contrast(150%);
+        top: -28px;
+    }
+
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background: linear-gradient(135deg, #fdf2f8 0%, #ffffff 50%, #fef7ed 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(248, 187, 217, 0.8), rgba(245, 245, 220, 0.6)), 
+                        url('https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 10;
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: clamp(1.125rem, 3vw, 1.5rem);
+            color: #4b5563;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #f472b6, #fb7185);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(244, 114, 182, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(244, 114, 182, 0.4);
+            background: linear-gradient(135deg, #ec4899, #f43f5e);
+        }
+
+        /* Services Section */
+        .services {
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            font-weight: 700;
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 1.125rem;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .service-card {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #fce7f3;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f472b6, #fb7185);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .service-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #fce7f3, #fdf2f8);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: #ec4899;
+        }
+
+        .service-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #fdf2f8, #fef7ed);
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .upload-zone {
+            border: 2px dashed #f472b6;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fefcff;
+        }
+
+        .upload-zone:hover {
+            border-color: #ec4899;
+            background: #fdf2f8;
+        }
+
+        .upload-zone.dragover {
+            border-color: #ec4899;
+            background: #fdf2f8;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            color: #f472b6;
+            margin: 0 auto 1rem;
+        }
+
+        .upload-button {
+            background: #f472b6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .upload-button:hover {
+            background: #ec4899;
+            transform: translateY(-1px);
+        }
+
+        .image-previews {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .image-preview {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-preview:hover .remove-image {
+            opacity: 1;
+        }
+
+        .issue-description {
+            margin-top: 2rem;
+        }
+
+        .issue-description label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-description textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .issue-description textarea:focus {
+            outline: none;
+            border-color: #f472b6;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1);
+        }
+
+        /* Form Section */
+        .form-section {
+            padding: 5rem 0;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #f472b6;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1);
+        }
+
+        .form-group.error input,
+        .form-group.error select {
+            border-color: #ef4444;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .delivery-options {
+            background: #fdf2f8;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+
+        .delivery-options h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .radio-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, #f472b6, #fb7185);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 114, 182, 0.3);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Why Choose Us Section */
+        .why-choose-us {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #fef7ed, #fdf2f8);
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .value-card {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #fce7f3;
+        }
+
+        .value-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .value-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #fce7f3, #fdf2f8);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: #ec4899;
+        }
+
+        .value-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .success-message.show {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .success-message .icon {
+            color: #16a34a;
+            width: 24px;
+            height: 24px;
+        }
+
+        .success-content h4 {
+            color: #166534;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .success-content p {
+            color: #15803d;
+            font-size: 0.875rem;
+        }
+
+        /* Chat Button */
+        .chat-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-decoration: none;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                background-attachment: scroll;
+            }
+            
+            .hero-content {
+                padding: 1rem;
+            }
+
+            .services,
+            .upload-section,
+            .form-section,
+            .why-choose-us {
+                padding: 3rem 0;
+            }
+
+            .upload-container,
+            .form-container {
+                padding: 2rem 1.5rem;
+                margin: 0 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .values-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-button {
+                bottom: 1rem;
+                right: 1rem;
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Hide file input */
+        #imageUpload {
+            display: none;
+        }
+    </style>
+</head>
+
+
+
+<!-- search Popup -->
+    <div class="body-overlay" id="body-overlay"></div>
+    <div class="search-popup" id="search-popup">
+        <form action="{% url 'Ecommerce:search' %}" class="search-form">
+            <div class="form-group">
+                <input name="query" type="text" class="form-control" placeholder="Search.....">
+            </div>
+            <button type="submit" class="submit-btn"><i class="fa fa-search"></i></button>
+        </form>
+    </div>
+    <!-- search Popup end -->
+
+    
+    <!--sidebar menu start-->
+    <div class="sidebar-menu" id="sidebar-menu">
+        <button class="sidebar-menu-close">X</button>
+        <div class="sidebar-inner">
+            <div class="sidebar-logo">
+                <img src="{% static 'assets/img/logo.png' %}" alt="">
+            </div>
+            <div class="sidemenu-text">
+                <p>We believe brand interaction is key in commu- nication. Real inno vations and a positive customer experience are the heart of successful commu- nication.</p>
+            </div>
+            <div class="sidebar-contact">
+                <h4>Contact Us</h4>
+                <ul>
+                                    <div class="details">
+                    <li><i class="fa fa-map-marker"></i>Edmonton Alberta.</li>
+                    <li><i class="fa fa-envelope"></i>Marysmartcollections@gmail.com</li>
+                    <li><i class="fa fa-phone"></i>+17808632797</li>
+                </ul>
+            </div>
+            <div class="sidebar-subscribe">
+                <input type="text" placeholder="Email">
+                <button><i class="fa fa-long-arrow-right"></i></button>
+            </div>
+            <div class="social-link">
+                <ul>
+
+                 
+                 <li><a href="https://vm.tiktok.com/ZMSjn3ey1/"><i class="fab fa-tiktok"></i> TikTok</a></li>
+                 <li><a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link"><i class="icon-instagram"></i> Instagram</a></li>
+
+                   <!---- <li><a href="#"><i class="fa fa-facebook-f"></i></a></li>
+                    <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                    <li><a href="#"><i class="fa fa-instagram"></i></a></li>
+                    <li><a href="#"><i class="fa fa-pinterest"></i></a></li> -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--sidebar menu end-->
+
+    <!-- navbar start -->
+    <div class="stoon-navbar">
+        <div class="header-top d-none d-sm-block">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-lg-4 col-8">
+                        <div class="contact">
+                            <a href="tel:+(1780)8632797"><i class="icon-call-header"></i> +1(780)8632797</a>
+                            <a href="#"><i class="icon-email-subscribe"></i> Marysmartcollections@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-none d-lg-block">
+                        <div class="shipping text-center">
+                            <p>FREE SHIPPING - <span>on all orders over $35*</span></p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-4">
+                        <div class="social">
+                            <ul class="nav-social justify-content-end">
+                               <li><a href="https://vm.tiktok.com/ZMSjn3ey1/"><i class="fab fa-tiktok"></i> TikTok</a></li>
+                 <li><a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link"><i class="icon-instagram"></i> Instagram</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="navbar navbar-area navbar-expand-lg nav-style-01">
+            <div class="container-fluid nav-container">
+                <div class="row">
+                    <div class="col-lg-3 col-4 order-1 align-self-center">
+                        <div class="logo">
+                            <a href="{% url 'Ecommerce:home' %}"><img id="images" src="{% static 'assets/img/logo.png' %}" alt=""></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 order-3 order-lg-2">
+                        <div class="collapse navbar-collapse" id="shop-menu">
+                            <ul class="navbar-nav menu-open">
+                                <li class="">
+                                    <a href="{% url 'Ecommerce:home' %}">Home </a>
+                                    
+                                </li>
+                                <li class="menu-item-has-children">
+                                    <a href="#">Shop <i class="fa fa-angle-down"></i></a>
+                                    <ul class="sub-menu">
+                                        
+                                        <li><a href="{% url 'Ecommerce:collection-full' %}">Shop Full</a></li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item-has-children">
+                                    <a href="#">Pages <i class="fa fa-angle-down"></i></a>
+                                    <ul class="sub-menu">
+                                        <li><a href="{% url 'Ecommerce:blog' %}">Blog</a></li>
+                                        
+                                        <li><a href="{% url 'cart:cart_detail' %}">Shoping Cart</a></li>
+                                        <li><a href="{% url 'Ecommerce:coming-soon' %}">Coming Soon</a></li>
+                                        <li><a href="{% url 'accounts:login' %}">Log-In Account</a></li>
+                                        <li><a href=" {% url 'alteration_request' %}">Alteration Request</a></li>
+
+                                       
+
+
+                                    </ul>
+                                </li>
+                                <li><a href="{% url 'Ecommerce:about' %}">About Us</a></li>
+                                <li><a href="{% url 'Ecommerce:contact' %}">Contact us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-8 justify-content-end d-flex order-2 order-lg-3">
+                        <div class="nav-right-part">
+                            <ul>
+                                <li>
+                                    <a href="#" id="search"><i class="icon-search"></i></a>
+                                </li>
+                                <li>
+                                    <a href="#"><i class="icon-heart"></i><span class="badge"></span></a>
+                                </li>
+                                <li class="has-dropdown">
+                                    <a href="{% url 'cart:cart_detail' %}"><i class="icon-add-to-cat"></i><span class="badge">{{ cart|length }}</span></a>
+                                </li>
+                                <li>
+                                    <a href="#"><i class="icon-user"></i></a>
+                                    <ul class="user-dropdown">
+                                        <li><a href="#">Sign In | Join</a></li>
+                                        <li><a href="{% url 'accounts:login' %}"><i class="icon-user"></i> My Account</a></li>
+                                        <li><a href="#"><i class="fa fa-briefcase"></i> My Orders</a></li>
+                                        <li><a href="#"><i class="fa fa-reply"></i> Returns Information</a></li>
+                                        <li><a href="#"><i class="fa fa-commenting-o"></i> Contact Preferences</a></li>
+                                    </ul>
+                                </li>
+                                <li class="d-none d-lg-block">
+                                    <a href="#" id="navigation-button"><i class="icon-bar-icon"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="responsive-mobile-menu">
+                            <div class="menu toggle-btn d-block d-lg-none" data-toggle="collapse" data-target="#shop-menu" aria-expanded="false" role="button">
+                                <div class="icon-left"></div>
+                                <div class="icon-right"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- navbar end -->
+
+
+
+
+<body>
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
@@ -93,13 +912,13 @@
                     </p>
                 </div>
                 
-                <input type="file" id="imageUpload" name="garment_images" multiple accept="image/*" style="display: none;">
+                <input type="file" id="imageUpload" multiple accept="image/*">
                 
                 <div class="image-previews" id="imagePreviews"></div>
                 
                 <div class="issue-description">
                     <label for="issueDescription">Describe the Issue</label>
-                    <textarea id="issueDescription" name="issue_description" rows="3" placeholder="Brief description of what needs to be altered..."></textarea>
+                    <textarea id="issueDescription" rows="3" placeholder="Brief description of what needs to be altered..."></textarea>
                 </div>
             </div>
         </div>
@@ -112,22 +931,6 @@
             <p class="section-subtitle">Fill out the details below and we'll get back to you within 24 hours.</p>
             
             <div class="form-container">
-                <!-- Success Message -->
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="success-message show">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 12l2 2 4-4"/>
-                                <circle cx="12" cy="12" r="10"/>
-                            </svg>
-                            <div class="success-content">
-                                <h4>{{ message.tags|title }}</h4>
-                                <p>{{ message }}</p>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                
                 <div class="success-message" id="successMessage">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 12l2 2 4-4"/>
@@ -139,127 +942,138 @@
                     </div>
                 </div>
                 
-                <form id="alterationForm" method="post" enctype="multipart/form-data">
+                <form id="alterationForm">
                     {% csrf_token %}
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="{{ form.name.id_for_label }}">{{ form.name.label }} <span class="required">*</span></label>
-                            {{ form.name }}
-                            {% if form.name.errors %}
-                                <div class="error-message">{{ form.name.errors.0 }}</div>
-                            {% endif %}
+                            <label for="name">Full Name <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" placeholder="Your full name" required>
+                            <div class="error-message" id="nameError"></div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="{{ form.email.id_for_label }}">{{ form.email.label }} <span class="required">*</span></label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="error-message">{{ form.email.errors.0 }}</div>
-                            {% endif %}
+                            <label for="email">Email Address <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                            <div class="error-message" id="emailError"></div>
                         </div>
                     </div>
                     
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }} <span class="required">*</span></label>
-                            {{ form.phone }}
-                            {% if form.phone.errors %}
-                                <div class="error-message">{{ form.phone.errors.0 }}</div>
-                            {% endif %}
-                        </div>
+  <div class="form-group">
+    <label for="phone">Phone Number <span class="required">*</span></label>
+    <input type="tel" id="phone" name="phone" value="+1 (780) 863-2797" required>
+    <div class="error-message" id="phoneError"></div>
+  </div>
+</div>
+
                         
                         <div class="form-group">
-                            <label for="{{ form.garment_type.id_for_label }}">{{ form.garment_type.label }} <span class="required">*</span></label>
-                            {{ form.garment_type }}
-                            {% if form.garment_type.errors %}
-                                <div class="error-message">{{ form.garment_type.errors.0 }}</div>
-                            {% endif %}
+                            <label for="garmentType">Garment Type <span class="required">*</span></label>
+                            <select id="garmentType" name="garmentType" required>
+                                <option value="">Select garment type</option>
+                                <option value="dress">Dress</option>
+                                <option value="pants">Pants/Trousers</option>
+                                <option value="skirt">Skirt</option>
+                                <option value="blouse">Blouse/Shirt</option>
+                                <option value="jacket">Jacket/Blazer</option>
+                                <option value="jeans">Jeans</option>
+                                <option value="formal">Formal Wear</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="error-message" id="garmentTypeError"></div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>{{ form.alteration_types.label }} <span class="required">*</span> <span style="font-weight: normal; color: #6b7280;">(Select all that apply)</span></label>
+                        <label>Alteration Type <span class="required">*</span> <span style="font-weight: normal; color: #6b7280;">(Select all that apply)</span></label>
                         <div class="checkbox-group">
-                            {% for choice in form.alteration_types %}
-                                <div class="checkbox-item">
-                                    {{ choice.tag }}
-                                    <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                                </div>
-                            {% endfor %}
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hemming" name="alterationType" value="hemming">
+                                <label for="hemming">Hemming</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="takeIn" name="alterationType" value="takeIn">
+                                <label for="takeIn">Take In</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="letOut" name="alterationType" value="letOut">
+                                <label for="letOut">Let Out</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="shortenSleeves" name="alterationType" value="shortenSleeves">
+                                <label for="shortenSleeves">Shorten Sleeves</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lengthenSleeves" name="alterationType" value="lengthenSleeves">
+                                <label for="lengthenSleeves">Lengthen Sleeves</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="zipRepair" name="alterationType" value="zipRepair">
+                                <label for="zipRepair">Zip Repair</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="buttonReplacement" name="alterationType" value="buttonReplacement">
+                                <label for="buttonReplacement">Button Replacement</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="waistAdjustment" name="alterationType" value="waistAdjustment">
+                                <label for="waistAdjustment">Waist Adjustment</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="otherAlteration" name="alterationType" value="other">
+                                <label for="otherAlteration">Other</label>
+                            </div>
                         </div>
-                        {% if form.alteration_types.errors %}
-                            <div class="error-message">{{ form.alteration_types.errors.0 }}</div>
-                        {% endif %}
+                        <div class="error-message" id="alterationTypeError"></div>
                     </div>
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="{{ form.measurements.id_for_label }}">{{ form.measurements.label }} <span style="font-weight: normal; color: #6b7280;">(Optional)</span></label>
-                            {{ form.measurements }}
+                            <label for="measurements">Measurements <span style="font-weight: normal; color: #6b7280;">(Optional)</span></label>
+                            <textarea id="measurements" name="measurements" rows="3" placeholder="Any specific measurements or sizing notes..."></textarea>
                         </div>
                         
                         <div class="form-group">
-                            <label for="{{ form.preferred_date.id_for_label }}">{{ form.preferred_date.label }} <span class="required">*</span></label>
-                            {{ form.preferred_date }}
-                            {% if form.preferred_date.errors %}
-                                <div class="error-message">{{ form.preferred_date.errors.0 }}</div>
-                            {% endif %}
+                            <label for="preferredDate">Preferred Date <span class="required">*</span></label>
+                            <input type="date" id="preferredDate" name="preferredDate" required>
+                            <div class="error-message" id="preferredDateError"></div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                        {{ form.description }}
+                        <label for="specialInstructions">Special Instructions</label>
+                        <textarea id="specialInstructions" name="specialInstructions" rows="4" placeholder="Any additional details, special requests, or concerns..."></textarea>
                     </div>
                     
                     <!-- Delivery Options -->
                     <div class="delivery-options">
                         <h3>Delivery Options</h3>
                         <div class="radio-group">
-                            {% for choice in form.delivery_option %}
-                                <div class="radio-item">
-                                    {{ choice.tag }}
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        {% if choice.choice_value == 'pickup' %}
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                                <circle cx="12" cy="10" r="3"/>
-                                            </svg>
-                                        {% else %}
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
-                                                <path d="M15 18H9"/>
-                                                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
-                                                <circle cx="17" cy="18" r="2"/>
-                                                <circle cx="7" cy="18" r="2"/>
-                                            </svg>
-                                        {% endif %}
-                                        <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                                    </div>
+                            <div class="radio-item">
+                                <input type="radio" id="pickup" name="deliveryOption" value="pickup" checked>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    <label for="pickup">Pickup from our location (Free)</label>
                                 </div>
-                            {% endfor %}
-                        </div>
-                        
-                        <!-- Address fields (shown/hidden based on delivery option) -->
-                        <div class="address-fields">
-                            <div class="form-group pickup-address" style="display: none;">
-                                <label for="{{ form.pickup_address.id_for_label }}">{{ form.pickup_address.label }}</label>
-                                {{ form.pickup_address }}
-                                {% if form.pickup_address.errors %}
-                                    <div class="error-message">{{ form.pickup_address.errors.0 }}</div>
-                                {% endif %}
                             </div>
-                            
-                            <div class="form-group delivery-address" style="display: none;">
-                                <label for="{{ form.delivery_address.id_for_label }}">{{ form.delivery_address.label }}</label>
-                                {{ form.delivery_address }}
-                                {% if form.delivery_address.errors %}
-                                    <div class="error-message">{{ form.delivery_address.errors.0 }}</div>
-                                {% endif %}
+                            <div class="radio-item">
+                                <input type="radio" id="delivery" name="deliveryOption" value="delivery">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                                        <path d="M15 18H9"/>
+                                        <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                                        <circle cx="17" cy="18" r="2"/>
+                                        <circle cx="7" cy="18" r="2"/>
+                                    </svg>
+                                    <label for="delivery">Home delivery (+$15)</label>
+                                </div>
                             </div>
                         </div>
-                        
                         <p style="font-size: 0.875rem; color: #6b7280; margin-top: 1rem;">
                             Delivery charges will be added to your final invoice. Free pickup available Monday-Saturday 9AM-6PM.
                         </p>
@@ -315,11 +1129,376 @@
         </div>
     </section>
 
+     <!-- instagram start -->
+    <div class="instagram-area margin-top-75">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <div class="instagram-title margin-bottom-40">
+                        <h4> <span>
+    @ <a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link" target="_blank">FOLLOW</a>
+  </span>
+  US ON INSTAGRAM
+</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="instagram-slider2">
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/1.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/2.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/3.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/4.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/5.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
+                        </div>
+                        <div class="thumb">
+                            <img src="{% static 'assets/img/instagram/6.png' %}" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- instagram end -->
+
+     <!-- footer area start -->
+    <footer class="footer-area footer-style-1 padding-top-70 margin-top-70">
+        <div class="footer-top padding-bottom-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">CATEGORIES</h4>
+                            <ul>
+                               
+                                <li><a href="{% url 'Ecommerce:home' %}">Women</a></li>
+                                <li><a href="{% url 'Ecommerce:home' %}">Girls</a></li>
+                               
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">OUR POLICY</h4>
+                            <ul>
+                                
+                                <li><a href="{% url 'Ecommerce:contact' %}">Contact Us</a></li>
+                               
+                                <li><a href="{% url 'accounts:login' %}">My Account</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="widget contact-widget">
+                            <h4 class="widget-title">GET IN TOUCH</h4>
+                            <ul class="contact_info_list">
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-home-foother"></i>
+                                    </div>
+                                    <div class="details">
+                                        <span>Edmonton Alberta.<br>P.O. Box 16023 13 Ave SW. <br>T6W 3N6rfv </span>
+                                    </div>
+                                </li>
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-email-subscribe"></i>
+                                    </div>
+                                    <div class="details">
+                                       Marysmartcollections@gmail.com
+                                    </div>
+                                </li>
+                                <li class="single-info-item">
+                                    <div class="icon">
+                                        <i class="icon-call-footer"></i>
+                                    </div>
+                                    <div class="details">
+                                        <a href="tel:+17808632797">+1(780)8632797</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <div class="widget widget_nav_menu">
+                            <h4 class="widget-title">FOLLOW US</h4>
+                            <ul>
+                                <li><a href="https://vm.tiktok.com/ZMSjn3ey1/"><i class="fab fa-tiktok"></i> TikTok</a></li>
+                 <li><a href="https://www.instagram.com/reel/DJm-0GYhet-/?utm_source=ig_web_copy_link"><i class="icon-instagram"></i> Instagram</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p>© Marysmartcollections 2020. Powered with <i class="fa fa-heart"></i> by <a href="http://chinazaportfollio.vercel.app" target="_blanc">MS Collections</a>.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/1.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/2.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/3.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="'{% static 'assets/img/payment/4.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/5.png' %}" alt=""></a></li>
+                            <li><a href="#"><img src="{% static 'assets/img/payment/6.png' %}" alt=""></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- footer area end -->
+
+    <!-- back to top area start -->
+    <div class="back-to-top">
+        <span class="back-top"><i class="fa fa-angle-up"></i></span>
+    </div>
+    <!-- back to top area end -->
+
+    <!-- all plugins here -->
+    <script src="{% static 'assets/js/vendor.js' %}"></script>
+    <!-- main js  -->
+    <script src="{% static 'assets/js/main.js' %}"></script>
+    
+
     <!-- Floating Chat Button -->
-    <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" class="chat-button" title="Chat with us on WhatsApp">
+    <a href="https://wa.me/+1 (780) 863-2797" target="_blank" rel="noopener noreferrer" class="chat-button" title="Chat with us on WhatsApp">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
         </svg>
     </a>
-</div>
+
+    <script>
+        // Image Upload Functionality
+        const uploadZone = document.getElementById('uploadZone');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreviews = document.getElementById('imagePreviews');
+        let uploadedFiles = [];
+
+        // Set minimum date to today
+        document.getElementById('preferredDate').min = new Date().toISOString().split('T')[0];
+
+        // Drag and drop functionality
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        uploadZone.addEventListener('click', () => {
+            imageUpload.click();
+        });
+
+        imageUpload.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const fileArray = Array.from(files);
+            const validFiles = fileArray.filter(file => 
+                file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024
+            );
+
+            if (validFiles.length + uploadedFiles.length > 5) {
+                alert('Maximum 5 images allowed');
+                return;
+            }
+
+            validFiles.forEach(file => {
+                uploadedFiles.push(file);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    createImagePreview(e.target.result, uploadedFiles.length - 1);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function createImagePreview(src, index) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'image-preview';
+            previewDiv.innerHTML = `
+                <img src="${src}" alt="Preview ${index + 1}">
+                <button type="button" class="remove-image" onclick="removeImage(${index})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+            imagePreviews.appendChild(previewDiv);
+        }
+
+        function removeImage(index) {
+            uploadedFiles.splice(index, 1);
+            imagePreviews.innerHTML = '';
+            uploadedFiles.forEach((file, i) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    createImagePreview(e.target.result, i);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Form Validation and Submission
+        const form = document.getElementById('alterationForm');
+        const submitButton = document.getElementById('submitButton');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="loading"></span> Submitting Request...';
+
+            try {
+                // Simulate form submission (replace with actual API call)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Show success message
+                successMessage.classList.add('show');
+                
+                // Reset form
+                form.reset();
+                uploadedFiles = [];
+                imagePreviews.innerHTML = '';
+                document.getElementById('issueDescription').value = '';
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                }, 5000);
+                
+                // Scroll to top of form
+                document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('There was an error submitting your request. Please try again.');
+            } finally {
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Submit Alteration Request';
+            }
+        });
+
+        function validateForm() {
+            let isValid = true;
+            
+            // Clear previous errors
+            document.querySelectorAll('.form-group').forEach(group => {
+                group.classList.remove('error');
+            });
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.textContent = '';
+            });
+
+            // Validate required fields
+            const requiredFields = [
+                { id: 'name', message: 'Name is required' },
+                { id: 'email', message: 'Email is required' },
+                { id: 'phone', message: 'Phone number is required' },
+                { id: 'garmentType', message: 'Please select a garment type' },
+                { id: 'preferredDate', message: 'Please select a preferred date' }
+            ];
+
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element.value.trim();
+                
+                if (!value) {
+                    showError(field.id, field.message);
+                    isValid = false;
+                }
+            });
+
+            // Validate email format
+            const email = document.getElementById('email').value.trim();
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('email', 'Please enter a valid email address');
+                isValid = false;
+            }
+
+            // Validate alteration type (at least one checkbox must be checked)
+            const alterationTypes = document.querySelectorAll('input[name="alterationType"]:checked');
+            if (alterationTypes.length === 0) {
+                showError('alterationType', 'Please select at least one alteration type');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const formGroup = field.closest('.form-group');
+            const errorElement = document.getElementById(fieldId + 'Error');
+            
+            if (formGroup) {
+                formGroup.classList.add('error');
+            }
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+        }
+
+        // Real-time validation
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('blur', () => {
+                const fieldId = element.id;
+                const errorElement = document.getElementById(fieldId + 'Error');
+                
+                if (errorElement && errorElement.textContent) {
+                    // Re-validate this field
+                    const value = element.value.trim();
+                    if (value) {
+                        element.closest('.form-group').classList.remove('error');
+                        errorElement.textContent = '';
+                    }
+                }
+            });
+        });
+
+        // Smooth scrolling for CTA button
+        document.querySelector('.cta-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('form-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        });
+    </script>
+</body>
+</html>
 {% endblock %}
