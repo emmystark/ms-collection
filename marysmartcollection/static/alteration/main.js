@@ -133,6 +133,19 @@ function initFormValidation() {
         try {
             const formData = new FormData(form);
             
+            // Add alteration types from checkboxes
+            const alterationTypes = [];
+            const checkedBoxes = form.querySelectorAll('input[name="alteration_types"]:checked');
+            checkedBoxes.forEach(checkbox => {
+                alterationTypes.push(checkbox.value);
+            });
+            
+            // Remove existing alteration_types entries and add the collected ones
+            formData.delete('alteration_types');
+            alterationTypes.forEach(type => {
+                formData.append('alteration_types', type);
+            });
+            
             // Add uploaded images to form data
             const imageUpload = document.getElementById('imageUpload');
             if (imageUpload && imageUpload.files) {
@@ -147,6 +160,11 @@ function initFormValidation() {
                 formData.append('issue_description', issueDescription.value);
             }
 
+            // Debug: Log form data
+            console.log('Form data being sent:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
             const response = await fetch(form.action || window.location.href, {
                 method: 'POST',
                 body: formData,
@@ -179,6 +197,7 @@ function initFormValidation() {
                 // Scroll to top of form
                 document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
             } else {
+                console.log('Form submission failed:', result);
                 // Handle validation errors
                 if (result.errors) {
                     displayFormErrors(result.errors);

@@ -1,22 +1,38 @@
 from django import forms
-from .models import AlterationRequest
+from .models import AlterationRequest, AlterationImage
+from django.forms import modelformset_factory
 
 class AlterationRequestForm(forms.ModelForm):
     class Meta:
         model = AlterationRequest
-        fields = ['name', 'email', 'phone', 'pickup_address', 'delivery_address', 'description']
-
+        fields = [
+            'name',
+            'email',
+            'phone',
+            'garment_type',
+            'alteration_type',
+            'measurements',
+            'description',
+            'delivery_option',
+            'pickup_address',
+            'delivery_address',
+            'preferred_date',
+            'issue_description',
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Your full name'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Your email address'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone number'}),
-            'pickup_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Pickup address'}),
-            'delivery_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Delivery address'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'What needs to be altered?'}),
+            'preferred_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AlterationRequestForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True
 
+class AlterationImageForm(forms.ModelForm):
+    class Meta:
+        model = AlterationImage
+        fields = ['image', 'description']
+
+
+AlterationImageFormSet = modelformset_factory(
+    AlterationImage,
+    form=AlterationImageForm,
+    extra=3,  # allows up to 3 images by default
+    can_delete=True
+)
